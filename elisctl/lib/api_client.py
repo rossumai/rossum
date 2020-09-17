@@ -436,47 +436,17 @@ class ELISClient(APIClient):
         }
         return get_json(self.post("connectors", data))
 
-    def create_serverless_function(
-        self,
-        name: str,
-        queues: List[str],
-        active: bool,
-        events: List[str],
-        config_runtime: str,
-        config_code: str,
-    ) -> dict:
-        data = {
-            "name": name,
-            "type": "function",
-            "queues": queues,
-            "active": active,
-            "events": events,
-            "config": {"runtime": config_runtime, "code": config_code},
-        }
-        return get_json(self.post("hooks", data))
-
     def create_hook(
-        self,
-        name: str,
-        queues: List[str],
-        active: bool,
-        events: List[str],
-        config_url: str,
-        config_secret: str,
-        config_insecure_ssl: bool,
+        self, name: str, type: str, queues: List[str], active: bool, events: List[str], config: Dict
     ) -> dict:
 
         data = {
             "name": name,
-            "type": "webhook",
+            "type": type,
             "queues": queues,
             "active": active,
             "events": events,
-            "config": {
-                "url": config_url,
-                "secret": config_secret,
-                "insecure_ssl": config_insecure_ssl,
-            },
+            "config": config,
         }
         return get_json(self.post("hooks", data))
 

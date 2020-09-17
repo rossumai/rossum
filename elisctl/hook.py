@@ -6,6 +6,8 @@ from elisctl.lib import QUEUES
 from elisctl.lib.api_client import ELISClient
 from tabulate import tabulate
 
+from elisctl.option import OptionRequiredIf
+
 
 @click.group("hook")
 def cli() -> None:
@@ -22,13 +24,13 @@ def cli() -> None:
 @option.active
 @option.events
 @click.pass_context
-@option.webhook_option_group
+# @option.webhook_option_group
 @option.config_url
-@option.config_secret
-@option.config_insecure_ssl
-@option.function_option_group
+# @option.config_secret
+# @option.config_insecure_ssl
+# @option.function_option_group
 @option.config_code
-@option.config_runtime
+# @option.config_runtime
 def create_command(
     ctx: click.Context,
     hook_type: str,
@@ -36,11 +38,12 @@ def create_command(
     queue_ids: Tuple[int, ...],
     active: bool,
     events: Tuple[str, ...],
-    config_url: str,
-    config_secret: str,
-    config_insecure_ssl: bool,
-    config_code: str,
-    config_runtime: str,
+    # config_url: str,
+    # config_secret: str,
+    # config_insecure_ssl: bool,
+    # config_code: str,
+    # config_runtime: str,
+    **kwargs,
 ) -> None:
 
     with ELISClient(context=ctx.obj) as elis:
@@ -54,14 +57,15 @@ def create_command(
                 if queue_dict:
                     queue_urls.append(queue_dict["url"])
 
+        config = {**kwargs}
+        click.echo(config)  # TODO: here you need to remove the config_
         response = elis.create_hook(
             name=name,
+            type=hook_type,
             queues=queue_urls,
             active=active,
             events=list(events),
-            config_url=config_url,
-            config_secret=config_secret,
-            config_insecure_ssl=config_insecure_ssl,
+            config=config,
         )
         click.echo(
             f"{response['id']}, {response['name']}, {response['queues']}, {response['events']}, {response['config']['url']}"

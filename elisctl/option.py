@@ -112,7 +112,8 @@ events = click.option(
 
 
 hook_type = click.option(
-    "--type",
+    "-t",
+    "--hook-type",
     required=True,
     default="webhook",
     type=click.Choice(["function", "webhook"]),
@@ -123,8 +124,42 @@ webhook_option_group = optgroup.group(
     "Webhook options", cls=AllOptionGroup, help="Group description"
 )
 
-config_url = optgroup.option(
-    "--config-url", type=str, help="URL endpoint where the message from the hook should be pushed."
+
+class OptionRequiredIf(click.Option):
+    def full_process_value(self, ctx, value):
+        value = super(OptionRequiredIf, self).full_process_value(ctx, value)
+
+        # TODO: here, you will store the list of params that are required for each
+        #  type and will run the comparison against ctx.params within the if below, to find out
+        #  what values are missing
+        click.echo(ctx.params)
+        if value is None and ctx.params["hook_type"] == "function":
+            msg = "Required if --hook_type=function"
+            raise click.MissingParameter(ctx=ctx, param=self, message=msg)
+        elif value is None and ctx.params["hook_type"] == "webhook":
+            msg = "Required if --hook_type=webhook"
+            raise click.MissingParameter(ctx=ctx, param=self, message=msg)
+        return value
+
+
+# config_url = optgroup.option(
+#     "--config-url", type=str, help="URL endpoint where the message from the hook should be pushed.", cls=OptionRequiredIf
+# )
+
+
+config_url = click.option(
+    "--config-url",
+    type=str,
+    help="URL endpoint where the message from the hook should be pushed.",
+    cls=OptionRequiredIf,
+)
+
+config_code = click.option(
+    "--config-code",
+    type=str,
+    default=None,
+    help="String-serialized source code to be executed.",
+    cls=OptionRequiredIf,
 )
 
 config_secret = optgroup.option(
@@ -138,12 +173,9 @@ config_insecure_ssl = optgroup.option(
     help="Disable SSL certificate verification. (Use only for testing purposes.)",
 )
 
+
 function_option_group = optgroup.group(
     "Function options", cls=AllOptionGroup, help="Group description"
-)
-
-config_code = optgroup.option(
-    "--config-code", type=str, default=None, help="String-serialized source code to be executed."
 )
 
 config_runtime = optgroup.option(

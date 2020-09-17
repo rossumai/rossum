@@ -3,6 +3,7 @@ from typing import Optional, Callable
 import click
 
 from elisctl.common import schema_content_factory
+from click_option_group import optgroup, AllOptionGroup
 
 
 organization = click.option(
@@ -109,22 +110,47 @@ events = click.option(
     help="List of events, when the hook should be notified.",
 )
 
-config_url = click.option(
-    "--config-url",
+
+hook_type = click.option(
+    "--type",
     required=True,
-    type=str,
-    help="URL endpoint where the message from the hook should be pushed.",
+    default="webhook",
+    type=click.Choice(["function", "webhook"]),
+    help="Hook type. Possible values: webhook, function.",
 )
 
-config_secret = click.option(
+webhook_option_group = optgroup.group(
+    "Webhook options", cls=AllOptionGroup, help="Group description"
+)
+
+config_url = optgroup.option(
+    "--config-url", type=str, help="URL endpoint where the message from the hook should be pushed."
+)
+
+config_secret = optgroup.option(
     "--config-secret", type=str, default=None, help="Secret key for authorization of payloads."
 )
 
-config_insecure_ssl = click.option(
+config_insecure_ssl = optgroup.option(
     "--config_insecure_ssl",
     type=bool,
     default=False,
     help="Disable SSL certificate verification. (Use only for testing purposes.)",
+)
+
+function_option_group = optgroup.group(
+    "Function options", cls=AllOptionGroup, help="Group description"
+)
+
+config_code = optgroup.option(
+    "--config-code", type=str, default=None, help="String-serialized source code to be executed."
+)
+
+config_runtime = optgroup.option(
+    "--config-runtime",
+    type=str,
+    default="nodejs12.x.",
+    help="Runtime used to execute code. Allowed values: nodejs12.x.",
 )
 
 

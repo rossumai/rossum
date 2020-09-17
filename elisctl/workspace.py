@@ -22,6 +22,7 @@ def create_command(ctx: click.Context, name: str, organization_id: Optional[int]
         organization_url = elis.get_organization(organization_id)["url"]
 
         res = elis.post("workspaces", {"name": name, "organization": organization_url})
+        # use create_workspace method
     workspace_dict = get_json(res)
     click.echo(workspace_dict["id"])
 

@@ -14,18 +14,24 @@ def cli() -> None:
 
 @cli.command(name="create", help="Create a hook object.")
 @argument.name
+@option.hook_type
 @option.queue(
     help="Queue IDs, that the hook will be associated with. "
     "Required field - will be assigned to an only queue automatically if not specified."
 )
 @option.active
 @option.events
-@option.config_url
-@option.config_insecure_ssl
-@option.config_secret
 @click.pass_context
+@option.webhook_option_group
+@option.config_url
+@option.config_secret
+@option.config_insecure_ssl
+@option.function_option_group
+@option.config_code
+@option.config_runtime
 def create_command(
     ctx: click.Context,
+    hook_type: str,
     name: str,
     queue_ids: Tuple[int, ...],
     active: bool,
@@ -33,9 +39,12 @@ def create_command(
     config_url: str,
     config_secret: str,
     config_insecure_ssl: bool,
+    config_code: str,
+    config_runtime: str,
 ) -> None:
 
     with ELISClient(context=ctx.obj) as elis:
+
         if not queue_ids:
             queue_urls = [elis.get_queue()["url"]]
         else:

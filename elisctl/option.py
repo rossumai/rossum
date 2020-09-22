@@ -3,8 +3,6 @@ from typing import Optional, Callable
 import click
 
 from elisctl.common import schema_content_factory
-from click_option_group import optgroup, AllOptionGroup
-
 
 organization = click.option(
     "-o", "--organization-id", type=int, help="Organization ID.", hidden=True
@@ -110,41 +108,52 @@ events = click.option(
     help="List of events, when the hook should be notified.",
 )
 
-
 hook_type = click.option(
     "-t",
     "--hook-type",
     required=True,
-    default="webhook",
     type=click.Choice(["function", "webhook"]),
     help="Hook type. Possible values: webhook, function.",
-)
-
-webhook_option_group = optgroup.group(
-    "Webhook options", cls=AllOptionGroup, help="Group description"
 )
 
 
 class OptionRequiredIf(click.Option):
     def full_process_value(self, ctx, value):
         value = super(OptionRequiredIf, self).full_process_value(ctx, value)
+        option = self.human_readable_name
 
-        # TODO: here, you will store the list of params that are required for each
-        #  type and will run the comparison against ctx.params within the if below, to find out
-        #  what values are missing
-        click.echo(ctx.params)
+        expected_function_options = ["config_runtime", "config_code"]
+        expected_webhook_options = ["config_url", "config_secret", "config_insecure_ssl"]
+
         if value is None and ctx.params["hook_type"] == "function":
-            msg = "Required if --hook_type=function"
-            raise click.MissingParameter(ctx=ctx, param=self, message=msg)
+            for opt in expected_function_options:
+                if option in expected_function_options:
+                    if opt not in [key for key in ctx.params.keys()]:
+                        msg = "Required if --hook-type=function"
+                        raise click.MissingParameter(ctx=ctx, message=msg)
+
+            for opt in expected_webhook_options:
+                if option in expected_webhook_options:
+                    if opt in [key for key in ctx.params.keys()]:
+                        if ctx.params.get(opt) is not None:
+                            non_valid_param = opt
+                            msg = f"Illegal usage: --{non_valid_param} is mutually exclusive with --hook-type=function"
+                            raise click.UsageError(ctx=ctx, message=msg)
+
         elif value is None and ctx.params["hook_type"] == "webhook":
-            msg = "Required if --hook_type=webhook"
-            raise click.MissingParameter(ctx=ctx, param=self, message=msg)
+            for opt in expected_webhook_options:
+                if opt not in [i for i in ctx.params.keys()]:
+                    msg = "Required if --hook-type=webhook"
+                    raise click.MissingParameter(ctx=ctx, param=self, message=msg)
+
+            for opt in expected_function_options:
+                if option in expected_function_options:
+                    if opt in [key for key in ctx.params.keys()]:
+                        if ctx.params.get(opt) is not None:
+                            non_valid_param = opt
+                            msg = f"Illegal usage: --{non_valid_param} is mutually exclusive with --hook-type=webhook"
+                            raise click.UsageError(ctx=ctx, message=msg)
         return value
-
-
-# config_url = optgroup.option(
-#     "--config-url", type=str, help="URL endpoint where the message from the hook should be pushed.", cls=OptionRequiredIf
-# )
 
 
 config_url = click.option(
@@ -154,35 +163,32 @@ config_url = click.option(
     cls=OptionRequiredIf,
 )
 
+config_secret = click.option(
+    "--config-secret",
+    type=str,
+    help="Secret key for authorization of payloads.",
+    cls=OptionRequiredIf,
+)
+
+config_insecure_ssl = click.option(
+    "--config_insecure_ssl",
+    type=bool,
+    help="Disable SSL certificate verification. (Use only for testing purposes.)",
+    cls=OptionRequiredIf,
+)
+
 config_code = click.option(
     "--config-code",
-    type=str,
-    default=None,
+    type=click.Path(readable=True),
     help="String-serialized source code to be executed.",
     cls=OptionRequiredIf,
 )
 
-config_secret = optgroup.option(
-    "--config-secret", type=str, default=None, help="Secret key for authorization of payloads."
-)
-
-config_insecure_ssl = optgroup.option(
-    "--config_insecure_ssl",
-    type=bool,
-    default=False,
-    help="Disable SSL certificate verification. (Use only for testing purposes.)",
-)
-
-
-function_option_group = optgroup.group(
-    "Function options", cls=AllOptionGroup, help="Group description"
-)
-
-config_runtime = optgroup.option(
+config_runtime = click.option(
     "--config-runtime",
     type=str,
-    default="nodejs12.x.",
     help="Runtime used to execute code. Allowed values: nodejs12.x.",
+    cls=OptionRequiredIf,
 )
 
 

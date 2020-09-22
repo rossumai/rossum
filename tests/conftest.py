@@ -4,7 +4,6 @@ import os
 import re
 from platform import platform
 from typing import Dict, Tuple
-
 import pytest
 from _pytest.fixtures import FixtureRequest
 from requests_mock.request import _RequestObjectProxy as Request
@@ -95,7 +94,8 @@ def mock_file(tmp_path):
 
 
 def match_uploaded_json(uploaded_json: dict, request: Request) -> bool:
-    return request.json() == uploaded_json
+    assert request.json() == uploaded_json
+    return True
 
 
 def match_uploaded_data(filename: str, request: Request) -> bool:

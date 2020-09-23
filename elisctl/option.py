@@ -108,6 +108,41 @@ events = click.option(
     help="List of events, when the hook should be notified.",
 )
 
+
+class OptionRequiredIf(click.Option):
+    def full_process_value(self, ctx, value):
+        value = super(OptionRequiredIf, self).full_process_value(ctx, value)
+        option = self.human_readable_name
+
+        required_params = {
+            "webhook": {
+                "mutually_exclusive": "function",
+                "config": ["config_url", "config_secret", "config_insecure_ssl"],
+            },
+            "function": {
+                "mutually_exclusive": "webhook",
+                "config": ["config_runtime", "config_code"],
+            },
+        }
+
+        if value is None:
+            expected_params = required_params.get(ctx.params["hook_type"], [])
+            for opt in expected_params["config"]:
+                if option in expected_params["config"]:
+                    if opt not in [key for key in ctx.params.keys()]:
+                        msg = f"Required if hook type is {ctx.params['hook_type']}"
+                        raise click.MissingParameter(ctx=ctx, message=msg)
+
+            for opt in required_params[expected_params["mutually_exclusive"]]["config"]:
+                if opt in [key for key in ctx.params.keys()]:
+                    if ctx.params.get(opt) is not None:
+                        non_valid_param = opt
+                        msg = f"Illegal usage: --{non_valid_param} cannot be used for the hook type {ctx.params['hook_type']}"
+                        raise click.UsageError(ctx=ctx, message=msg)
+
+        return value
+
+
 hook_type = click.option(
     "-t",
     "--hook-type",
@@ -115,45 +150,6 @@ hook_type = click.option(
     type=click.Choice(["function", "webhook"]),
     help="Hook type. Possible values: webhook, function.",
 )
-
-
-class OptionRequiredIf(click.Option):
-    def full_process_value(self, ctx, value):
-        value = super(OptionRequiredIf, self).full_process_value(ctx, value)
-        option = self.human_readable_name
-
-        expected_function_options = ["config_runtime", "config_code"]
-        expected_webhook_options = ["config_url", "config_secret", "config_insecure_ssl"]
-
-        if value is None and ctx.params["hook_type"] == "function":
-            for opt in expected_function_options:
-                if option in expected_function_options:
-                    if opt not in [key for key in ctx.params.keys()]:
-                        msg = "Required if --hook-type=function"
-                        raise click.MissingParameter(ctx=ctx, message=msg)
-
-            for opt in expected_webhook_options:
-                if option in expected_webhook_options:
-                    if opt in [key for key in ctx.params.keys()]:
-                        if ctx.params.get(opt) is not None:
-                            non_valid_param = opt
-                            msg = f"Illegal usage: --{non_valid_param} is mutually exclusive with --hook-type=function"
-                            raise click.UsageError(ctx=ctx, message=msg)
-
-        elif value is None and ctx.params["hook_type"] == "webhook":
-            for opt in expected_webhook_options:
-                if opt not in [i for i in ctx.params.keys()]:
-                    msg = "Required if --hook-type=webhook"
-                    raise click.MissingParameter(ctx=ctx, param=self, message=msg)
-
-            for opt in expected_function_options:
-                if option in expected_function_options:
-                    if opt in [key for key in ctx.params.keys()]:
-                        if ctx.params.get(opt) is not None:
-                            non_valid_param = opt
-                            msg = f"Illegal usage: --{non_valid_param} is mutually exclusive with --hook-type=webhook"
-                            raise click.UsageError(ctx=ctx, message=msg)
-        return value
 
 
 config_url = click.option(

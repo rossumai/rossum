@@ -3,6 +3,7 @@ from functools import partial
 from itertools import chain
 from pathlib import Path
 from traceback import print_tb, format_tb
+from typing import List
 
 import pytest
 
@@ -19,14 +20,72 @@ HOOK_NAME = "My First Hook"
 EVENTS = ["annotation_status", "another_event"]
 CONFIG_URL = "http://hook.somewhere.com:5000"
 CONFIG_SECRET = "some_secret_key"
-CONFIG_CODE = "tests/data/snippet_code.js"
+ROOT_DIR = Path(__file__).absolute().parents[1]
+CONFIG_CODE = str(ROOT_DIR / "tests" / "data" / "snippet_code.js")
 CONFIG_RUNTIME = "nodejs12.x"
 ACTIVE = True
 
 
+def get_params(hook_type, value):
+    required_params = {
+        "webhook": {
+            "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET, "insecure_ssl": False},
+            "expected_result": f", {CONFIG_URL}, {CONFIG_SECRET}",
+            "illegal_usage_result": "--config_runtime cannot be used for the hook type webhook",
+            "missing_option_result": "'--config-insecure-ssl'.  Required if hook type is webhook",
+            "expected_table": f"""\
+  id  name           events                              queues  active    url                             insecure_ssl    secret
+----  -------------  --------------------------------  --------  --------  ------------------------------  --------------  ---------------
+ {HOOK_ID}  {HOOK_NAME}  {", ".join(e for e in EVENTS)}     {QUEUE_ID}  {ACTIVE}      {CONFIG_URL}  False           {CONFIG_SECRET}
+""",
+        },
+        "function": {
+            "config": {"code": Path(CONFIG_CODE).read_text(), "runtime": CONFIG_RUNTIME},
+            "expected_result": "",
+            "illegal_usage_result": "--config_url cannot be used for the hook type function",
+            "missing_option_result": "'--config-runtime'.  Required if hook type is function",
+            "expected_table": f"""\
+  id  name           events                              queues  active
+----  -------------  --------------------------------  --------  --------
+ {HOOK_ID}  {HOOK_NAME}  {", ".join(e for e in EVENTS)}     {QUEUE_ID}  {ACTIVE}
+""",
+        },
+    }
+
+    config = required_params.get(hook_type).get("config")
+    expected_result = required_params.get(hook_type).get(value)
+
+    result = hook_type, config, expected_result
+
+    return result
+
+
+def get_options(hook_type: str, config: dict, tmp_path) -> List:
+    option_list = []
+    if hook_type == "function":
+        p = tmp_path / "test"
+        p.write_text(config["code"])
+        option_list = ["--config-code", str(p), "--config-runtime", config["runtime"]]
+
+    elif hook_type == "webhook":
+        option_list = [
+            "--config-secret",
+            config["secret"],
+            "--config-url",
+            config["url"],
+            "--config-insecure-ssl",
+            config["insecure_ssl"],
+        ]
+    return option_list
+
+
 @pytest.mark.usefixtures("mock_login_request", "elis_credentials")
 class TestCreate:
-    def test_success_if_type_webhook(self, requests_mock, cli_runner):
+    @pytest.mark.parametrize(
+        "hook_type,config,expected",
+        [(get_params("webhook", "expected_result")), (get_params("function", "expected_result"))],
+    )
+    def test_success(self, requests_mock, cli_runner, tmp_path, hook_type, config, expected):
         requests_mock.get(
             re.compile(fr"{QUEUES_URL}/\d$"),
             json=lambda request, context: {"url": request.url},
@@ -39,11 +98,11 @@ class TestCreate:
                 match_uploaded_json,
                 {
                     "name": HOOK_NAME,
-                    "type": "webhook",
+                    "type": hook_type,
                     "queues": QUEUES_URLS,
                     "active": ACTIVE,
                     "events": EVENTS,
-                    "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET, "insecure_ssl": False},
+                    "config": config,
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -51,10 +110,10 @@ class TestCreate:
             json={
                 "id": HOOK_ID,
                 "name": HOOK_NAME,
-                "type": "webhook",
+                "type": hook_type,
                 "queues": [DEFAULT_QUEUE_URL],
                 "events": EVENTS,
-                "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET, "insecure_ssl": False},
+                "config": config,
             },
         )
 
@@ -63,31 +122,37 @@ class TestCreate:
             [HOOK_NAME]
             + list(chain.from_iterable(("-q", q) for q in QUEUES))
             + list(chain.from_iterable(("-e", e) for e in EVENTS))
-            + [
-                "--active",
-                ACTIVE,
-                "--hook-type",
-                "webhook",
-                "--config-url",
-                CONFIG_URL,
-                "--config-secret",
-                CONFIG_SECRET,
-                "--config_insecure_ssl",
-                False,
-            ],
+            + ["--active", ACTIVE, "--hook-type", hook_type]
+            + get_options(hook_type, config, tmp_path),
         )
 
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert result.output == (
-            f"{HOOK_ID}, {HOOK_NAME}, ['{DEFAULT_QUEUE_URL}'], {EVENTS}, {CONFIG_URL}, {CONFIG_SECRET}\n"
+            f"{HOOK_ID}, {HOOK_NAME}, ['{DEFAULT_QUEUE_URL}'], {EVENTS}{expected}\n"
         )
 
-    def test_success_if_type_function(self, requests_mock, cli_runner):
+    @pytest.mark.parametrize(
+        "hook_type,config,expected",
+        [
+            (get_params("webhook", "illegal_usage_result")),
+            (get_params("function", "illegal_usage_result")),
+        ],
+    )
+    def test_illegal_usage(self, requests_mock, cli_runner, tmp_path, hook_type, config, expected):
         requests_mock.get(
             re.compile(fr"{QUEUES_URL}/\d$"),
             json=lambda request, context: {"url": request.url},
             request_headers={"Authorization": f"Token {TOKEN}"},
         )
+        options = get_options(hook_type, config, tmp_path)
+
+        if hook_type == "function":
+            config["url"] = CONFIG_URL
+            options = options + ["--config-url", CONFIG_URL]
+
+        elif hook_type == "webhook":
+            config["runtime"] = CONFIG_RUNTIME
+            options = options + ["--config-runtime", CONFIG_RUNTIME]
 
         requests_mock.post(
             HOOKS_URL,
@@ -95,11 +160,11 @@ class TestCreate:
                 match_uploaded_json,
                 {
                     "name": HOOK_NAME,
-                    "type": "function",
+                    "type": hook_type,
                     "queues": QUEUES_URLS,
                     "active": ACTIVE,
                     "events": EVENTS,
-                    "config": {"code": Path(CONFIG_CODE).read_text(), "runtime": CONFIG_RUNTIME},
+                    "config": config,
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -107,10 +172,10 @@ class TestCreate:
             json={
                 "id": HOOK_ID,
                 "name": HOOK_NAME,
-                "type": "function",
+                "type": hook_type,
                 "queues": [DEFAULT_QUEUE_URL],
                 "events": EVENTS,
-                "config": {"code": CONFIG_CODE, "runtime": CONFIG_RUNTIME},
+                "config": config,
             },
         )
 
@@ -119,27 +184,39 @@ class TestCreate:
             [HOOK_NAME]
             + list(chain.from_iterable(("-q", q) for q in QUEUES))
             + list(chain.from_iterable(("-e", e) for e in EVENTS))
-            + [
-                "--active",
-                ACTIVE,
-                "--hook-type",
-                "function",
-                "--config-code",
-                CONFIG_CODE,
-                "--config-runtime",
-                CONFIG_RUNTIME,
-            ],
+            + ["--active", ACTIVE, "--hook-type", hook_type]
+            + options,
         )
 
-        assert not result.exit_code, print_tb(result.exc_info[2])
-        assert result.output == (f"{HOOK_ID}, {HOOK_NAME}, ['{DEFAULT_QUEUE_URL}'], {EVENTS}\n")
+        assert result.exit_code, print_tb(result.exc_info[2])
+        assert result.output == (
+            f"Usage: create [OPTIONS] NAME\n"
+            f"Try 'create --help' for help.\n\n"
+            f"Error: Illegal usage: {expected}\n"
+        )
 
-    def test_illegal_usage_if_type_webhook(self, requests_mock, cli_runner):
+    @pytest.mark.parametrize(
+        "hook_type,config,expected",
+        [
+            (get_params("webhook", "missing_option_result")),
+            (get_params("function", "missing_option_result")),
+        ],
+    )
+    def test_missing_option(self, requests_mock, cli_runner, tmp_path, hook_type, config, expected):
         requests_mock.get(
             re.compile(fr"{QUEUES_URL}/\d$"),
             json=lambda request, context: {"url": request.url},
             request_headers={"Authorization": f"Token {TOKEN}"},
         )
+        options = get_options(hook_type, config, tmp_path)
+
+        if hook_type == "function":
+            del config["runtime"]
+            options = options[:-2]
+
+        elif hook_type == "webhook":
+            del config["insecure_ssl"]
+            options = options[:-2]
 
         requests_mock.post(
             HOOKS_URL,
@@ -147,16 +224,11 @@ class TestCreate:
                 match_uploaded_json,
                 {
                     "name": HOOK_NAME,
-                    "type": "webhook",
+                    "type": hook_type,
                     "queues": QUEUES_URLS,
                     "active": ACTIVE,
                     "events": EVENTS,
-                    "config": {
-                        "url": CONFIG_URL,
-                        "secret": CONFIG_SECRET,
-                        "insecure_ssl": False,
-                        "config_runtime": CONFIG_RUNTIME,
-                    },
+                    "config": config,
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -164,15 +236,10 @@ class TestCreate:
             json={
                 "id": HOOK_ID,
                 "name": HOOK_NAME,
-                "type": "webhook",
+                "type": hook_type,
                 "queues": [DEFAULT_QUEUE_URL],
                 "events": EVENTS,
-                "config": {
-                    "url": CONFIG_URL,
-                    "secret": CONFIG_SECRET,
-                    "insecure_ssl": False,
-                    "config_runtime": CONFIG_RUNTIME,
-                },
+                "config": config,
             },
         )
 
@@ -181,197 +248,24 @@ class TestCreate:
             [HOOK_NAME]
             + list(chain.from_iterable(("-q", q) for q in QUEUES))
             + list(chain.from_iterable(("-e", e) for e in EVENTS))
-            + [
-                "--active",
-                ACTIVE,
-                "--hook-type",
-                "webhook",
-                "--config-url",
-                CONFIG_URL,
-                "--config-secret",
-                CONFIG_SECRET,
-                "--config_insecure_ssl",
-                False,
-                "--config-runtime",
-                CONFIG_RUNTIME,
-            ],
+            + ["--active", ACTIVE, "--hook-type", hook_type]
+            + options,
         )
 
         assert result.exit_code, print_tb(result.exc_info[2])
         assert result.output == (
             "Usage: create [OPTIONS] NAME\n"
             "Try 'create --help' for help.\n\n"
-            "Error: Illegal usage: --config_runtime is mutually exclusive with --hook-type=webhook\n"
-            ""
+            f"Error: Missing option {expected}\n"
         )
 
-    def test_illegal_usage_if_type_function(self, requests_mock, cli_runner):
-        requests_mock.get(
-            re.compile(fr"{QUEUES_URL}/\d$"),
-            json=lambda request, context: {"url": request.url},
-            request_headers={"Authorization": f"Token {TOKEN}"},
-        )
-
-        requests_mock.post(
-            HOOKS_URL,
-            additional_matcher=partial(
-                match_uploaded_json,
-                {
-                    "name": HOOK_NAME,
-                    "type": "function",
-                    "queues": QUEUES_URLS,
-                    "active": ACTIVE,
-                    "events": EVENTS,
-                    "config": {
-                        "code": Path(CONFIG_CODE).read_text(),
-                        "runtime": CONFIG_RUNTIME,
-                        "url": CONFIG_URL,
-                    },
-                },
-            ),
-            request_headers={"Authorization": f"Token {TOKEN}"},
-            status_code=201,
-            json={
-                "id": HOOK_ID,
-                "name": HOOK_NAME,
-                "type": "function",
-                "queues": [DEFAULT_QUEUE_URL],
-                "events": EVENTS,
-                "config": {"code": CONFIG_CODE, "runtime": CONFIG_RUNTIME, "url": CONFIG_URL},
-            },
-        )
-
-        result = cli_runner.invoke(
-            create_command,
-            [HOOK_NAME]
-            + list(chain.from_iterable(("-q", q) for q in QUEUES))
-            + list(chain.from_iterable(("-e", e) for e in EVENTS))
-            + [
-                "--active",
-                ACTIVE,
-                "--hook-type",
-                "function",
-                "--config-code",
-                CONFIG_CODE,
-                "--config-runtime",
-                CONFIG_RUNTIME,
-                "--config-url",
-                CONFIG_URL,
-            ],
-        )
-
-        assert result.exit_code, print_tb(result.exc_info[2])
-        assert result.output == (
-            "Usage: create [OPTIONS] NAME\n"
-            "Try 'create --help' for help.\n\n"
-            "Error: Illegal usage: --config_url is mutually exclusive with --hook-type=function\n"
-            ""
-        )
-
-    def test_missing_option_if_type_webhook(self, requests_mock, cli_runner):
-        requests_mock.get(
-            re.compile(fr"{QUEUES_URL}/\d$"),
-            json=lambda request, context: {"url": request.url},
-            request_headers={"Authorization": f"Token {TOKEN}"},
-        )
-
-        requests_mock.post(
-            HOOKS_URL,
-            additional_matcher=partial(
-                match_uploaded_json,
-                {
-                    "name": HOOK_NAME,
-                    "type": "webhook",
-                    "queues": QUEUES_URLS,
-                    "active": ACTIVE,
-                    "events": EVENTS,
-                    "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET},
-                },
-            ),
-            request_headers={"Authorization": f"Token {TOKEN}"},
-            status_code=201,
-            json={
-                "id": HOOK_ID,
-                "name": HOOK_NAME,
-                "type": "webhook",
-                "queues": [DEFAULT_QUEUE_URL],
-                "events": EVENTS,
-                "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET},
-            },
-        )
-
-        result = cli_runner.invoke(
-            create_command,
-            [HOOK_NAME]
-            + list(chain.from_iterable(("-q", q) for q in QUEUES))
-            + list(chain.from_iterable(("-e", e) for e in EVENTS))
-            + [
-                "--active",
-                ACTIVE,
-                "--hook-type",
-                "webhook",
-                "--config-url",
-                CONFIG_URL,
-                "--config-secret",
-                CONFIG_SECRET,
-            ],
-        )
-
-        assert result.exit_code, print_tb(result.exc_info[2])
-        assert result.output == (
-            "Usage: create [OPTIONS] NAME\n"
-            "Try 'create --help' for help.\n\n"
-            "Error: Missing option '--config_insecure_ssl'.  Required if --hook-type=webhook\n"
-        )
-
-    def test_missing_option_if_type_function(self, requests_mock, cli_runner):
-        requests_mock.get(
-            re.compile(fr"{QUEUES_URL}/\d$"),
-            json=lambda request, context: {"url": request.url},
-            request_headers={"Authorization": f"Token {TOKEN}"},
-        )
-
-        requests_mock.post(
-            HOOKS_URL,
-            additional_matcher=partial(
-                match_uploaded_json,
-                {
-                    "name": HOOK_NAME,
-                    "type": "function",
-                    "queues": QUEUES_URLS,
-                    "active": ACTIVE,
-                    "events": EVENTS,
-                    "config": {"code": CONFIG_CODE},
-                },
-            ),
-            request_headers={"Authorization": f"Token {TOKEN}"},
-            status_code=201,
-            json={
-                "id": HOOK_ID,
-                "name": HOOK_NAME,
-                "type": "function",
-                "queues": [DEFAULT_QUEUE_URL],
-                "events": EVENTS,
-                "config": {"code": CONFIG_CODE},
-            },
-        )
-
-        result = cli_runner.invoke(
-            create_command,
-            [HOOK_NAME]
-            + list(chain.from_iterable(("-q", q) for q in QUEUES))
-            + list(chain.from_iterable(("-e", e) for e in EVENTS))
-            + ["--active", ACTIVE, "--hook-type", "function", "--config-code", CONFIG_CODE],
-        )
-
-        assert result.exit_code, print_tb(result.exc_info[2])
-        assert result.output == (
-            "Usage: create [OPTIONS] NAME\n"
-            "Try 'create --help' for help.\n\n"
-            "Error: Missing option '--config-runtime'.  Required if --hook-type=function\n"
-        )
-
-    def test_missing_queue_id(self, requests_mock, cli_runner):
+    @pytest.mark.parametrize(
+        "hook_type,config,expected",
+        [(get_params("webhook", "expected_result")), (get_params("function", "expected_result"))],
+    )
+    def test_missing_queue_id(
+        self, requests_mock, cli_runner, tmp_path, hook_type, config, expected
+    ):
         requests_mock.get(
             QUEUES_URL,
             json={
@@ -386,11 +280,11 @@ class TestCreate:
                 match_uploaded_json,
                 {
                     "name": HOOK_NAME,
-                    "type": "webhook",
+                    "type": hook_type,
                     "queues": [DEFAULT_QUEUE_URL],
                     "active": ACTIVE,
                     "events": EVENTS,
-                    "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET, "insecure_ssl": False},
+                    "config": config,
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -398,10 +292,10 @@ class TestCreate:
             json={
                 "id": HOOK_ID,
                 "name": HOOK_NAME,
-                "type": "webhook",
+                "type": hook_type,
                 "queues": [f"{QUEUES_URL}/{QUEUE_ID}"],
                 "events": EVENTS,
-                "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET, "insecure_ssl": False},
+                "config": config,
             },
         )
 
@@ -415,73 +309,40 @@ class TestCreate:
             create_command,
             [HOOK_NAME]
             + list(chain.from_iterable(("-e", e) for e in EVENTS))
-            + [
-                "--active",
-                ACTIVE,
-                "--hook-type",
-                "webhook",
-                "--config-url",
-                CONFIG_URL,
-                "--config-secret",
-                CONFIG_SECRET,
-                "--config_insecure_ssl",
-                False,
-            ],
+            + ["--active", ACTIVE, "--hook-type", hook_type]
+            + get_options(hook_type, config, tmp_path),
         )
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert (
-            f"{HOOK_ID}, {HOOK_NAME}, ['{DEFAULT_QUEUE_URL}'], {EVENTS}, {CONFIG_URL}, {CONFIG_SECRET}\n"
+            f"{HOOK_ID}, {HOOK_NAME}, ['{DEFAULT_QUEUE_URL}'], {EVENTS}{expected}\n"
             == result.output
         )
 
 
 @pytest.mark.usefixtures("mock_login_request", "elis_credentials")
 class TestList:
-    def test_success_if_type_webhook(self, requests_mock, cli_runner):
-        webhook_option = ["--hook-type", "webhook"]
-        result = self._test_list(cli_runner, requests_mock, True, webhook_option)
+    @pytest.mark.parametrize(
+        "hook_type,config,expected",
+        [(get_params("webhook", "expected_table")), (get_params("function", "expected_table"))],
+    )
+    def test_success(self, requests_mock, cli_runner, hook_type, config, expected):
+        result = self._test_list(cli_runner, requests_mock, True, hook_type, config)
 
-        expected_table = f"""\
-  id  name           events                              queues  active    url                             insecure_ssl    secret
-----  -------------  --------------------------------  --------  --------  ------------------------------  --------------  ---------------
- {HOOK_ID}  {HOOK_NAME}  {", ".join(e for e in EVENTS)}     {QUEUE_ID}  {ACTIVE}      {CONFIG_URL}  False           {CONFIG_SECRET}
-"""
-        assert result.output == expected_table
+        assert result.output == expected
 
-    def test_non_admin_does_not_see_auth_token__if_type_webhook(self, requests_mock, cli_runner):
-        webhook_option = ["--hook-type", "webhook"]
-        result = self._test_list(cli_runner, requests_mock, False, webhook_option)
+    @pytest.mark.parametrize(
+        "hook_type,config,expected",
+        [(get_params("webhook", "expected_table")), (get_params("function", "expected_table"))],
+    )
+    def test_non_admin_does_not_see_auth_token(
+        self, requests_mock, cli_runner, hook_type, config, expected
+    ):
+        result = self._test_list(cli_runner, requests_mock, False, hook_type, config)
 
-        expected_table = f"""\
-  id  name           events                              queues  active    url                             insecure_ssl
-----  -------------  --------------------------------  --------  --------  ------------------------------  --------------
- {HOOK_ID}  {HOOK_NAME}  {", ".join(e for e in EVENTS)}     {QUEUE_ID}  {ACTIVE}      {CONFIG_URL}  False
-"""
-        assert result.output == expected_table
-
-    def test_success_if_type_function(self, requests_mock, cli_runner):
-        function_option = ["--hook-type", "function"]
-        result = self._test_list(cli_runner, requests_mock, True, function_option)
-
-        expected_table = f"""\
-  id  name           events                              queues  active
-----  -------------  --------------------------------  --------  --------
- {HOOK_ID}  {HOOK_NAME}  {", ".join(e for e in EVENTS)}     {QUEUE_ID}  {ACTIVE}
-"""
-        assert result.output == expected_table
-
-    def test_non_admin_does_not_see_auth_token_if_type_function(self, requests_mock, cli_runner):
-        function_option = ["--hook-type", "function"]
-        result = self._test_list(cli_runner, requests_mock, False, function_option)
-        expected_table = f"""\
-  id  name           events                              queues  active
-----  -------------  --------------------------------  --------  --------
- {HOOK_ID}  {HOOK_NAME}  {", ".join(e for e in EVENTS)}     {QUEUE_ID}  {ACTIVE}
-"""
-        assert result.output == expected_table
+        assert result.output == expected
 
     @staticmethod
-    def _test_list(cli_runner, requests_mock, include_secret: bool, option):
+    def _test_list(cli_runner, requests_mock, include_secret: bool, hook_type, config):
         queue_url = f"{QUEUES_URL}/{QUEUE_ID}"
         requests_mock.get(
             f"{QUEUES_URL}",
@@ -490,41 +351,23 @@ class TestList:
                 "results": [{"url": queue_url, "id": QUEUE_ID}],
             },
         )
-        if option[1] == "webhook":
-            hook_result = {
-                "id": HOOK_ID,
-                "name": HOOK_NAME,
-                "type": "webhook",
-                "queues": [queue_url],
-                "active": ACTIVE,
-                "events": EVENTS,
-                "config": {"url": CONFIG_URL, "insecure_ssl": False},
-            }
 
-            if include_secret:
-                hook_result["config"].update({"secret": CONFIG_SECRET})  # type: ignore
+        hook_result = {
+            "id": HOOK_ID,
+            "name": HOOK_NAME,
+            "queues": [queue_url],
+            "active": ACTIVE,
+            "events": EVENTS,
+            "config": config,
+        }
 
-            requests_mock.get(
-                HOOKS_URL, json={"pagination": {"total": 1, "next": None}, "results": [hook_result]}
-            )
+        if include_secret and hook_type == "webhook":
+            hook_result["config"].update({"secret": CONFIG_SECRET})  # type: ignore
 
-        elif option[1] == "function":
-
-            hook_result = {
-                "id": HOOK_ID,
-                "name": HOOK_NAME,
-                "type": "function",
-                "queues": [queue_url],
-                "active": ACTIVE,
-                "events": EVENTS,
-                "config": {"code": Path(CONFIG_CODE).read_text(), "runtime": CONFIG_RUNTIME},
-            }
-
-            requests_mock.get(
-                HOOKS_URL, json={"pagination": {"total": 1, "next": None}, "results": [hook_result]}
-            )
-
-        result = cli_runner.invoke(list_command, option)
+        requests_mock.get(
+            HOOKS_URL, json={"pagination": {"total": 1, "next": None}, "results": [hook_result]}
+        )
+        result = cli_runner.invoke(list_command)
         assert not result.exit_code, format_tb(result.exc_info[2])
         return result
 
@@ -534,8 +377,11 @@ class TestChange:
     new_hook_name = "My patched new name"
     new_event = "new_event"
 
-    def test_success_if_type_webhook(self, requests_mock, cli_runner):
-
+    @pytest.mark.parametrize(
+        "hook_type,config,expected",
+        [(get_params("webhook", "expected_result")), (get_params("function", "expected_result"))],
+    )
+    def test_success(self, requests_mock, cli_runner, tmp_path, hook_type, config, expected):
         requests_mock.get(f"{QUEUES_URL}/{QUEUE_ID}", json={"url": f"{QUEUES_URL}/{QUEUE_ID}"})
 
         requests_mock.patch(
@@ -545,10 +391,10 @@ class TestChange:
                 {
                     "queues": [f"{QUEUES_URL}/{QUEUE_ID}"],
                     "name": self.new_hook_name,
-                    "type": "webhook",
+                    "type": hook_type,
                     "events": [self.new_event],
                     "active": True,
-                    "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET, "insecure_ssl": False},
+                    "config": config,
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -566,67 +412,15 @@ class TestChange:
                 "-e",
                 self.new_event,
                 "--hook-type",
-                "webhook",
-                "--config-url",
-                CONFIG_URL,
-                "--config-secret",
-                CONFIG_SECRET,
-                "--config_insecure_ssl",
-                False,
-            ],
+                hook_type,
+            ]
+            + get_options(hook_type, config, tmp_path),
         )
 
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert not result.output
 
-    def test_noop_if_type_webhook(self, requests_mock, cli_runner):
-        cli_runner.invoke(change_command, [HOOK_ID])
-        assert not requests_mock.called
-
-    def test_success_if_type_function(self, requests_mock, cli_runner):
-
-        requests_mock.get(f"{QUEUES_URL}/{QUEUE_ID}", json={"url": f"{QUEUES_URL}/{QUEUE_ID}"})
-
-        requests_mock.patch(
-            f"{HOOKS_URL}/{HOOK_ID}",
-            additional_matcher=partial(
-                match_uploaded_json,
-                {
-                    "queues": [f"{QUEUES_URL}/{QUEUE_ID}"],
-                    "name": self.new_hook_name,
-                    "type": "function",
-                    "events": [self.new_event],
-                    "active": True,
-                    "config": {"code": Path(CONFIG_CODE).read_text(), "runtime": CONFIG_RUNTIME},
-                },
-            ),
-            request_headers={"Authorization": f"Token {TOKEN}"},
-            status_code=200,
-        )
-
-        result = cli_runner.invoke(
-            change_command,
-            [
-                HOOK_ID,
-                "-q",
-                QUEUE_ID,
-                "-n",
-                self.new_hook_name,
-                "-e",
-                self.new_event,
-                "--hook-type",
-                "function",
-                "--config-code",
-                CONFIG_CODE,
-                "--config-runtime",
-                CONFIG_RUNTIME,
-            ],
-        )
-
-        assert not result.exit_code, print_tb(result.exc_info[2])
-        assert not result.output
-
-    def test_noop_if_type_function(self, requests_mock, cli_runner):
+    def test_noop(self, requests_mock, cli_runner):
         cli_runner.invoke(change_command, [HOOK_ID])
         assert not requests_mock.called
 

@@ -132,7 +132,6 @@ class OptionRequiredIf(click.Option):
                     if opt not in [key for key in ctx.params.keys()]:
                         msg = f"Required if hook type is {ctx.params['hook_type']}"
                         raise click.MissingParameter(ctx=ctx, message=msg)
-
             for opt in required_params[expected_params["mutually_exclusive"]]["config"]:
                 if opt in [key for key in ctx.params.keys()]:
                     if ctx.params.get(opt) is not None:
@@ -167,7 +166,7 @@ config_secret = click.option(
 )
 
 config_insecure_ssl = click.option(
-    "--config_insecure_ssl",
+    "--config-insecure-ssl",
     type=bool,
     help="Disable SSL certificate verification. (Use only for testing purposes.)",
     cls=OptionRequiredIf,
@@ -176,7 +175,7 @@ config_insecure_ssl = click.option(
 config_code = click.option(
     "--config-code",
     type=click.Path(readable=True),
-    help="String-serialized source code to be executed.",
+    help="Path to the file with the string-serialized source code to be executed.",
     cls=OptionRequiredIf,
 )
 

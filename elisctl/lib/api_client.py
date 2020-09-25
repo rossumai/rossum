@@ -312,11 +312,8 @@ class ELISClient(APIClient):
         self._sideload(connectors_list, sideloads)
         return connectors_list
 
-    def get_hooks(
-        self, hook_type: str, sideloads: Optional[Iterable[APIObject]] = None
-    ) -> List[dict]:
-        query = {"type": f"{hook_type}"}
-        hooks_list, _ = self.get_paginated(HOOKS, query)
+    def get_hooks(self, sideloads: Optional[Iterable[APIObject]] = None) -> List[dict]:
+        hooks_list, _ = self.get_paginated(HOOKS)
         self._sideload(hooks_list, sideloads)
         return hooks_list
 

@@ -8,22 +8,16 @@ from elisctl.lib.api_client import ELISClient
 from tabulate import tabulate
 
 
-def get_compiled_config(
-    config_url: str,
-    config_secret: str,
-    config_insecure_ssl: bool,
-    config_code: str,
-    config_runtime: str,
-):
-    config: Dict[str, Any] = {
-        "url": config_url,
-        "secret": config_secret,
-        "insecure_ssl": config_insecure_ssl,
-        "code": config_code,
-        "runtime": config_runtime,
-    }
-    new_config = {key: value for key, value in config.items() if value is not None}
-    return new_config
+def cleanup_config(config):
+    new_config = {}
+    for key, value in config.items():
+        if key.startswith("config_"):
+            new_key = key.replace("config_", "")
+            new_config[new_key] = value
+    config = {key: value for key, value in new_config.items() if value is not None}
+    if "code" in config.keys():
+        config["code"] = Path(config["code"]).read_text()
+    return config
 
 
 @click.group("hook")
@@ -53,11 +47,7 @@ def create_command(
     queue_ids: Tuple[int, ...],
     active: bool,
     events: Tuple[str, ...],
-    config_url: str,
-    config_secret: str,
-    config_insecure_ssl: bool,
-    config_code: str,
-    config_runtime: str,
+    **kwargs,
 ) -> None:
     with ELISClient(context=ctx.obj) as elis:
 
@@ -70,73 +60,44 @@ def create_command(
                 if queue_dict:
                     queue_urls.append(queue_dict["url"])
 
-        new_config = get_compiled_config(
-            config_url, config_secret, config_insecure_ssl, config_code, config_runtime
+        config = {**kwargs}
+        config = cleanup_config(config)
+
+        response = elis.create_hook(
+            name=name,
+            hook_type=hook_type,
+            queues=queue_urls,
+            active=active,
+            events=list(events),
+            config=config,
         )
 
-        if hook_type == "webhook":
+        additional_fields = [
+            value
+            for key, value in response["config"].items()
+            if key not in ["code", "runtime", "insecure_ssl"]
+        ]
 
-            response = elis.create_hook(
-                name=name,
-                hook_type=hook_type,
-                queues=queue_urls,
-                active=active,
-                events=list(events),
-                config=new_config,
-            )
-            click.echo(
-                f"{response['id']}, {response['name']}, {response['queues']}, {response['events']}, {response['config']['url']}, {response['config']['secret']}"
-            )
-
-        elif hook_type == "function":
-            new_config["code"] = Path(new_config["code"]).read_text()
-            response = elis.create_hook(
-                name=name,
-                hook_type=hook_type,
-                queues=queue_urls,
-                active=active,
-                events=list(events),
-                config=new_config,
-            )
-            click.echo(
-                f"{response['id']}, {response['name']}, {response['queues']}, {response['events']}"
-            )
+        regular_fields = (
+            f"{response['id']}, {response['name']}, {response['queues']}, {response['events']}"
+        )
+        click.echo(
+            regular_fields + ", " + f"{', '.join(map(str,additional_fields))}"
+            if additional_fields != []
+            else regular_fields
+        )
 
 
 @cli.command(name="list", help="List all hooks.")
-@option.hook_type
 @click.pass_context
-def list_command(ctx: click.Context, hook_type: str):
+def list_command(ctx: click.Context):
     with ELISClient(context=ctx.obj) as elis:
-        hooks_list = elis.get_hooks(hook_type, (QUEUES,))
+        hooks_list = elis.get_hooks((QUEUES,))
 
-        if hook_type == "webhook":
-            headers = ["id", "name", "events", "queues", "active", "url", "insecure_ssl"]
-        elif hook_type == "function":
-            headers = ["id", "name", "events", "queues", "active"]
+        headers = ["id", "name", "events", "queues", "active"]
 
-    def get_row(hook: dict, hook_type: str) -> List[str]:
-        if hook_type == "webhook":
-            res = [
-                hook["id"],
-                hook["name"],
-                ", ".join(e for e in hook["events"]),
-                ", ".join(str(q.get("id", "")) for q in hook["queues"]),
-                hook["active"],
-                hook["config"]["url"],
-                hook["config"]["insecure_ssl"],
-            ]
-            try:
-                secret_key = hook["config"]["secret"]
-            except KeyError:
-                pass
-            else:
-                res.append(secret_key)
-                if "secret" not in headers:
-                    headers.append("secret")
-
-        elif hook_type == "function":
-            res = [
+        def get_row(hook: dict) -> List[str]:
+            fields = [
                 hook["id"],
                 hook["name"],
                 ", ".join(e for e in hook["events"]),
@@ -144,10 +105,20 @@ def list_command(ctx: click.Context, hook_type: str):
                 hook["active"],
             ]
 
-        hook_list = [str(item) for item in res]
-        return hook_list
+            additional = ["url", "insecure_ssl", "secret"]
 
-    table = [get_row(hook, hook_type) for hook in hooks_list]
+            for field in additional:
+                if field in hook["config"]:
+                    fields.append(hook["config"][field])
+
+            for header in additional:
+                if header not in headers:
+                    headers.append(header)
+
+            hook_list = [item for item in fields]
+            return hook_list
+
+    table = [get_row(hook) for hook in hooks_list]
 
     click.echo(tabulate(table, headers=headers))
 
@@ -173,15 +144,11 @@ def change_command(
     hook_type: str,
     events: Tuple[str, ...],
     active: Optional[bool],
-    config_url: str,
-    config_secret: str,
-    config_insecure_ssl: bool,
-    config_code: str,
-    config_runtime: str,
+    **kwargs,
 ) -> None:
-    config = get_compiled_config(
-        config_url, config_secret, config_insecure_ssl, config_code, config_runtime
-    )
+
+    config = {**kwargs}
+    config = cleanup_config(config)
 
     if not any([queue_ids, name, active, events, config]):
         return
@@ -190,50 +157,20 @@ def change_command(
 
     with ELISClient(context=ctx.obj) as elis:
 
-        if hook_type == "webhook":
-            config_url = config["url"]
-            config_secret = config["secret"]
-            config_insecure_ssl = config["insecure_ssl"]
+        if queue_ids:
+            data["queues"] = [elis.get_queue(queue)["url"] for queue in queue_ids]
+        if name is not None:
+            data["name"] = name
+        if hook_type:
+            data["type"] = hook_type
+        if active is not None:
+            data["active"] = active
+        if events:
+            data["events"] = list(events)
+        if config:
+            data["config"] = config
 
-            if queue_ids:
-                data["queues"] = [elis.get_queue(queue)["url"] for queue in queue_ids]
-            if name is not None:
-                data["name"] = name
-            if hook_type:
-                data["type"] = hook_type
-            if active is not None:
-                data["active"] = active
-            if events:
-                data["events"] = list(events)
-            if config_url is not None:
-                data["config"].update({"url": config_url})
-            if config_secret is not None:
-                data["config"].update({"secret": config_secret})
-            if config_insecure_ssl is not None:
-                data["config"].update({"insecure_ssl": config_insecure_ssl})
-
-            elis.patch(f"hooks/{id_}", data)
-
-        elif hook_type == "function":
-            config_code = Path(config["code"]).read_text()
-            config_runtime = config["runtime"]
-
-            if queue_ids:
-                data["queues"] = [elis.get_queue(queue)["url"] for queue in queue_ids]
-            if name is not None:
-                data["name"] = name
-            if hook_type:
-                data["type"] = hook_type
-            if active is not None:
-                data["active"] = active
-            if events:
-                data["events"] = list(events)
-            if config_code is not None:
-                data["config"].update({"code": config_code})
-            if config_runtime is not None:
-                data["config"].update({"runtime": config_runtime})
-
-            elis.patch(f"hooks/{id_}", data)
+        elis.patch(f"hooks/{id_}", data)
 
 
 @cli.command(name="delete", help="Delete a hook.")

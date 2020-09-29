@@ -202,6 +202,11 @@ MIT
    
 ## Changelog
 
+### 2020-09-29 v3.1.0
+* Fix missing library in setup.py
+* Remove references to old package names
+* Update `setup.py`
+
 ### 2020-09-29 v3.0.0
 * elisctl was renamed to rossum
 

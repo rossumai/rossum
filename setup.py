@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="rossumctl",
-    version="2.10.2",
+    version="3.0.0",
     description="Command line interface for controlling the Rossum platform",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",

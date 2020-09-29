@@ -202,6 +202,9 @@ MIT
    
 ## Changelog
 
+### 2020-09-29 v3.0.0
+* elisctl was renamed to rossumctl
+
 ### 2020-07-27 v2.10.1
 * Fix attribute name for setting max token lifetime
 

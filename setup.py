@@ -16,7 +16,7 @@ setup(
         "Tracker": "https://github.com/rossumai/rossum/issues",
     },
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",
         "License :: OSI Approved :: MIT License",
@@ -26,6 +26,8 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Obsoletes-Dist :: elisctl",
     ],
     packages=find_packages(exclude=("tests*",)),
     install_requires=[

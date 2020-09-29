@@ -4,7 +4,7 @@ from traceback import print_tb
 
 import pytest
 
-from rossumctl.user_assignment import add_command, list_command, remove_command
+from rossum.user_assignment import add_command, list_command, remove_command
 from tests.conftest import QUEUES_URL, TOKEN, USERS_URL, match_uploaded_json
 
 

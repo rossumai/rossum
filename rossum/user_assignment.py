@@ -4,9 +4,9 @@ from tabulate import tabulate
 from typing import Tuple, Optional, List, Dict
 
 import click
-from rossumctl import option
-from rossumctl.lib import USERS, QUEUES
-from rossumctl.lib.api_client import RossumClient
+from rossum import option
+from rossum.lib import USERS, QUEUES
+from rossum.lib.api_client import RossumClient
 
 
 @click.group("user_assignment")

@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 
-from rossumctl.document.extract_data import get_data
+from rossum.document.extract_data import get_data
 from tests.conftest import ANNOTATIONS_URL, QUEUES_URL, TOKEN
 
 ANNOTATION_IDS = [315510, 315511]

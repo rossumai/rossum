@@ -5,9 +5,9 @@ from typing import Optional, IO
 import click
 from tabulate import tabulate
 
-from rossumctl import option, argument
-from rossumctl.lib.api_client import APIClient, get_json, RossumClient
-from rossumctl.lib import QUEUES
+from rossum import option, argument
+from rossum.lib.api_client import APIClient, get_json, RossumClient
+from rossum.lib import QUEUES
 
 from . import upload
 from .xlsx import SchemaToXlsx

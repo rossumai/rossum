@@ -9,7 +9,7 @@ import pytest
 from _pytest.fixtures import FixtureRequest
 from requests_mock.request import _RequestObjectProxy as Request
 
-from rossumctl import __version__
+from rossum import __version__
 
 API_URL = "httpmock://api.elis.rossum.ai"
 TOKEN = "secretsecret"
@@ -28,7 +28,7 @@ LOGIN_URL = f"{API_URL}/v1/auth/login"
 CONNECTORS_URL = f"{API_URL}/v1/connectors"
 HOOKS_URL = f"{API_URL}/v1/hooks"
 
-REQUEST_HEADERS = {"User-Agent": f"rossumctl/{__version__} ({platform()})"}
+REQUEST_HEADERS = {"User-Agent": f"rossum/{__version__} ({platform()})"}
 
 
 @pytest.fixture

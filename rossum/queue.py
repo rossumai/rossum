@@ -2,9 +2,9 @@ from typing import Optional, Dict, Any, List, Tuple
 
 import click
 from tabulate import tabulate
-from rossumctl import argument, option
-from rossumctl.lib import INBOXES, WORKSPACES, SCHEMAS, USERS, HOOKS
-from rossumctl.lib.api_client import RossumClient, get_json
+from rossum import argument, option
+from rossum.lib import INBOXES, WORKSPACES, SCHEMAS, USERS, HOOKS
+from rossum.lib.api_client import RossumClient, get_json
 
 locale_option = click.option(
     "--locale",

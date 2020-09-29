@@ -10,8 +10,8 @@ import requests
 from requests import Response
 from typing import Any, BinaryIO, Callable, Dict, IO, Iterable, List, Optional, Tuple, Union
 
-from rossumctl import __version__, CTX_PROFILE, CTX_DEFAULT_PROFILE
-from rossumctl.configure import get_credential
+from rossum import __version__, CTX_PROFILE, CTX_DEFAULT_PROFILE
+from rossum.configure import get_credential
 from . import (
     ORGANIZATIONS,
     APIObject,
@@ -32,7 +32,7 @@ class RossumException(click.ClickException):
 
 RequestsFiles = Dict[str, Tuple[Optional[str], Union[IO[bytes], BinaryIO, str]]]
 
-HEADERS = {"User-Agent": f"rossumctl/{__version__} ({platform()})"}
+HEADERS = {"User-Agent": f"rossum/{__version__} ({platform()})"}
 
 
 class APIClient(AbstractContextManager):

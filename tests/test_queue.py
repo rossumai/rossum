@@ -5,7 +5,7 @@ from typing import Optional
 
 import pytest
 
-from rossumctl.queue import create_command, list_command, delete_command, change_command
+from rossum.queue import create_command, list_command, delete_command, change_command
 from tests.conftest import (
     TOKEN,
     match_uploaded_json,

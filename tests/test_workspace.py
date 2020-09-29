@@ -5,7 +5,7 @@ from traceback import print_tb
 import pytest
 from more_itertools import ilen
 
-from rossumctl.workspace import create_command, list_command, delete_command, change_command
+from rossum.workspace import create_command, list_command, delete_command, change_command
 from tests.conftest import (
     TOKEN,
     match_uploaded_json,

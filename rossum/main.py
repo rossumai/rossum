@@ -1,8 +1,8 @@
 import click
 from click_shell import shell
 
-import rossumctl.schema.commands
-from rossumctl import (
+import rossum.schema.commands
+from rossum import (
     tools,
     configure,
     user,
@@ -20,7 +20,7 @@ from rossumctl import (
 
 @shell(
     prompt="rossum> ",
-    intro="Welcome to the rossumctl interactive mode. Start with `help` and `configure`.",
+    intro="Welcome to the rossum interactive mode. Start with `help` and `configure`.",
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 @click.version_option(__version__)
@@ -38,7 +38,7 @@ def entry_point(ctx: click.Context, profile: str) -> None:
 
 
 entry_point.add_command(tools.cli)
-entry_point.add_command(rossumctl.schema.commands.cli)
+entry_point.add_command(rossum.schema.commands.cli)
 entry_point.add_command(user.cli)
 entry_point.add_command(user_assignment.cli)
 entry_point.add_command(workspace.cli)

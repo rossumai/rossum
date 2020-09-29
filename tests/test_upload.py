@@ -6,7 +6,7 @@ from typing import List
 
 import pytest
 
-from rossumctl.schema.upload import upload_command
+from rossum.schema.upload import upload_command
 from tests.conftest import TOKEN, match_uploaded_json, SCHEMAS_URL, QUEUES_URL
 
 DATA = """\

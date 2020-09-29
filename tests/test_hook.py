@@ -5,7 +5,7 @@ from traceback import print_tb, format_tb
 
 import pytest
 
-from rossumctl.hook import list_command, change_command, delete_command, create_command
+from rossum.hook import list_command, change_command, delete_command, create_command
 from tests.conftest import TOKEN, match_uploaded_json, QUEUES_URL, HOOKS_URL
 
 QUEUES = ["1", "2"]

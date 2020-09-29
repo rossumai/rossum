@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="rossumctl",
+    name="rossum",
     version="3.0.0",
     description="Command line interface for controlling the Rossum platform",
     long_description=open("README.md").read(),
@@ -12,8 +12,8 @@ setup(
     author_email="support@rossum.ai",
     license="MIT",
     project_urls={
-        "Source": "https://github.com/rossumai/rossumctl",
-        "Tracker": "https://github.com/rossumai/rossumctl/issues",
+        "Source": "https://github.com/rossumai/rossum",
+        "Tracker": "https://github.com/rossumai/rossum/issues",
     },
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -45,5 +45,5 @@ setup(
     setup_requires=["pytest-runner"],
     tests_require=["pytest", "pytest-cov", "requests_mock", "pytest-click"],
     zip_safe=False,
-    entry_points={"console_scripts": ["rossumctl = rossumctl.main:entry_point"]},
+    entry_points={"console_scripts": ["rossum = rossum.main:entry_point"]},
 )

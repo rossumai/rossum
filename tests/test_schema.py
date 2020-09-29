@@ -5,8 +5,8 @@ from traceback import print_tb
 
 import pytest
 
-from rossumctl.schema.transform import commands as transform
-from rossumctl.schema.commands import download_command, list_command
+from rossum.schema.transform import commands as transform
+from rossum.schema.commands import download_command, list_command
 from tests.conftest import SCHEMAS_URL, QUEUES_URL, TOKEN
 
 SCHEMA_NAME = "schema.json"

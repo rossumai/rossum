@@ -6,8 +6,8 @@ import click
 import jmespath
 from typing.io import IO
 
-from rossumctl.lib.api_client import RossumClient, get_json, get_text
-from rossumctl import option
+from rossum.lib.api_client import RossumClient, get_json, get_text
+from rossum import option
 
 
 @click.command(name="extract", help="Upload documents and extract data from them.")

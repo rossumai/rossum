@@ -5,8 +5,8 @@ import io
 import pytest
 from pathlib import Path
 
-from rossumctl.common import schema_content_factory
-from rossumctl.schema.xlsx import XlsxToSchema
+from rossum.common import schema_content_factory
+from rossum.schema.xlsx import XlsxToSchema
 
 
 def file_decorator(*_args, **_kwargs):

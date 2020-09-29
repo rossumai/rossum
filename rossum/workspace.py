@@ -3,9 +3,9 @@ from typing import Optional, Dict, Any
 import click
 from tabulate import tabulate
 
-from rossumctl import argument, option
-from rossumctl.lib import QUEUES
-from rossumctl.lib.api_client import RossumClient, get_json
+from rossum import argument, option
+from rossum.lib import QUEUES
+from rossum.lib.api_client import RossumClient, get_json
 
 
 @click.group("workspace")

@@ -1,9 +1,9 @@
 from typing import Tuple, Optional, Dict, Any, List
 
 import click
-from rossumctl import option, argument
-from rossumctl.lib import QUEUES
-from rossumctl.lib.api_client import RossumClient
+from rossum import option, argument
+from rossum.lib import QUEUES
+from rossum.lib.api_client import RossumClient
 from tabulate import tabulate
 
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import click
 
-from rossumctl import CTX_PROFILE, CTX_DEFAULT_PROFILE
+from rossum import CTX_PROFILE, CTX_DEFAULT_PROFILE
 
 CONFIGURATION_PATH = Path.home() / ".rossum" / "credentials"
 DEFAULT_ROSSUM_URL = "https://api.elis.rossum.ai"
@@ -65,7 +65,7 @@ def get_credential(attr: str, profile: Optional[str] = None) -> str:
     except KeyError as e:
         raise click.ClickException(
             f"Provide API credential {attr}. "
-            f"Either by using `rossumctl configure`, or environment variable ROSSUM_{attr.upper()}."
+            f"Either by using `rossum configure`, or environment variable ROSSUM_{attr.upper()}."
         ) from e
     else:
         res = config_dict.get(attr)

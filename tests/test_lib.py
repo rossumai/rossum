@@ -4,8 +4,8 @@ from functools import partial
 import click
 import pytest
 
-from rossumctl.lib import APIObject, ANNOTATIONS
-from rossumctl.lib.api_client import APIClient, RossumClient
+from rossum.lib import APIObject, ANNOTATIONS
+from rossum.lib.api_client import APIClient, RossumClient
 from tests.conftest import (
     ANNOTATIONS_URL,
     API_URL,

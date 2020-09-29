@@ -6,8 +6,8 @@ from traceback import print_tb
 import pytest
 from click import ClickException
 
-from rossumctl import configure, CTX_DEFAULT_PROFILE, CTX_PROFILE
-from rossumctl.main import entry_point
+from rossum import configure, CTX_DEFAULT_PROFILE, CTX_PROFILE
+from rossum.main import entry_point
 
 
 class TestConfigure:
@@ -109,7 +109,7 @@ class TestConfigure:
 
         assert e.value.message == (
             "Provide API credential test. "
-            "Either by using `rossumctl configure`, or environment variable ROSSUM_TEST."
+            "Either by using `rossum configure`, or environment variable ROSSUM_TEST."
         )
 
 

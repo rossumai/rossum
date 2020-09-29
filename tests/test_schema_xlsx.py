@@ -8,9 +8,9 @@ from typing import List, Optional
 import pytest
 from openpyxl import load_workbook, Workbook
 
-from rossumctl.schema import xlsx
-from rossumctl.schema.commands import download_command
-from rossumctl.schema.upload import upload_command
+from rossum.schema import xlsx
+from rossum.schema.commands import download_command
+from rossum.schema.upload import upload_command
 from tests.conftest import TOKEN, SCHEMAS_URL, match_uploaded_json
 
 Matrix = List[List[Optional[str]]]

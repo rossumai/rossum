@@ -4,8 +4,8 @@ from typing import IO, Optional, Callable, Iterable
 
 import click
 
-from rossumctl.common import schema_content_factory
-from rossumctl.lib import split_dict_params
+from rossum.common import schema_content_factory
+from rossum.lib import split_dict_params
 
 name = click.argument("name", type=str)
 

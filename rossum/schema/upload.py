@@ -3,8 +3,8 @@ import click as click
 from typing import List, Optional, Dict, Union, Callable
 from typing.io import IO
 
-from rossumctl import argument
-from rossumctl.lib.api_client import get_json, RossumClient
+from rossum import argument
+from rossum.lib.api_client import get_json, RossumClient
 
 SchemaContent = List[dict]
 Schema = Dict[str, Union[str, SchemaContent]]

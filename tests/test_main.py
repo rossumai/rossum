@@ -1,6 +1,6 @@
 from traceback import print_tb
 
-from rossumctl.main import entry_point
+from rossum.main import entry_point
 
 
 class TestEntryPoint:

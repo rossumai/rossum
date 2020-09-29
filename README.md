@@ -19,7 +19,7 @@ interactively or programmatically.
 
 ## Installation
 
-See the [rossum setup tutorial](https://developers.rossum.ai/docs/setting-up-rossum)
+See the [rossum setup tutorial](https://developers.rossum.ai/docs/setting-up-rossum-tool)
 for detailed instructions.
 
 ### Windows
@@ -203,7 +203,7 @@ MIT
 ## Changelog
 
 ### 2020-09-29 v3.0.0
-* elisctl was renamed to rossumctl
+* elisctl was renamed to rossum
 
 ### 2020-07-27 v2.10.1
 * Fix attribute name for setting max token lifetime

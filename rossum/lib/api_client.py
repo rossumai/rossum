@@ -124,15 +124,20 @@ class APIClient(AbstractContextManager):
     def delete_url(self, url: str) -> Response:
         return self._request_url("delete", url, expected_status_code=204)
 
-    def _request_url(
+    def _do_request(
         self, method: str, url: str, query: dict = None, expected_status_code: int = 200, **kwargs
     ) -> Response:
         auth = self._authentication
         headers = {**HEADERS, **auth.pop("headers", {}), **kwargs.pop("headers", {})}
-
         response = requests.request(
             method, url, params=_encode_booleans(query), headers=headers, **auth, **kwargs
         )
+        return response
+
+    def _request_url(
+        self, method: str, url: str, query: dict = None, expected_status_code: int = 200, **kwargs
+    ) -> Response:
+        response = self._do_request(method, url, query, expected_status_code, **kwargs)
         if response.status_code != expected_status_code:
             raise RossumException(f"Invalid response [{response.url}]: {response.text}")
         return response

@@ -41,6 +41,7 @@ class TestCreate:
                     "active": ACTIVE,
                     "events": EVENTS,
                     "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET, "insecure_ssl": False},
+                    "sideload": ["queues"],
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -51,6 +52,7 @@ class TestCreate:
                 "queues": [DEFAULT_QUEUE_URL],
                 "events": EVENTS,
                 "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET, "insecure_ssl": False},
+                "sideload": ["queues"],
             },
         )
 
@@ -59,12 +61,21 @@ class TestCreate:
             [HOOK_NAME]
             + list(chain.from_iterable(("-q", q) for q in QUEUES))
             + list(chain.from_iterable(("-e", e) for e in EVENTS))
-            + ["--active", ACTIVE, "--config-url", CONFIG_URL, "--config-secret", CONFIG_SECRET],
+            + [
+                "--active",
+                ACTIVE,
+                "--config-url",
+                CONFIG_URL,
+                "--config-secret",
+                CONFIG_SECRET,
+                "--sideload",
+                "queues",
+            ],
         )
 
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert result.output == (
-            f"{HOOK_ID}, {HOOK_NAME}, ['{DEFAULT_QUEUE_URL}'], {EVENTS}, {CONFIG_URL}\n"
+            f"{HOOK_ID}, {HOOK_NAME}, ['{DEFAULT_QUEUE_URL}'], {EVENTS}, ['queues'], {CONFIG_URL}\n"
         )
 
     def test_missing_queue_id(self, requests_mock, cli_runner):
@@ -87,6 +98,7 @@ class TestCreate:
                     "active": ACTIVE,
                     "events": EVENTS,
                     "config": {"url": CONFIG_URL, "secret": None, "insecure_ssl": False},
+                    "sideload": [],
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -97,6 +109,7 @@ class TestCreate:
                 "queues": [f"{QUEUES_URL}/{QUEUE_ID}"],
                 "events": EVENTS,
                 "config": {"url": CONFIG_URL},
+                "sideload": [],
             },
         )
 
@@ -114,7 +127,7 @@ class TestCreate:
         )
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert (
-            f"{HOOK_ID}, {HOOK_NAME}, ['{DEFAULT_QUEUE_URL}'], {EVENTS}, {CONFIG_URL}\n"
+            f"{HOOK_ID}, {HOOK_NAME}, ['{DEFAULT_QUEUE_URL}'], {EVENTS}, [], {CONFIG_URL}\n"
             == result.output
         )
 
@@ -125,9 +138,9 @@ class TestList:
         result = self._test_list(cli_runner, requests_mock, True)
 
         expected_table = f"""\
-  id  name           events                              queues  active    url                             insecure_ssl    secret
-----  -------------  --------------------------------  --------  --------  ------------------------------  --------------  ---------------
- {HOOK_ID}  {HOOK_NAME}  {", ".join(e for e in EVENTS)}     {QUEUE_ID}  {ACTIVE}      {CONFIG_URL}  False           {CONFIG_SECRET}
+  id  name           events                              queues  active    url                             insecure_ssl    sideload    secret
+----  -------------  --------------------------------  --------  --------  ------------------------------  --------------  ----------  ---------------
+ {HOOK_ID}  {HOOK_NAME}  {", ".join(e for e in EVENTS)}     {QUEUE_ID}  {ACTIVE}      {CONFIG_URL}  False           []          {CONFIG_SECRET}
 """
         assert result.output == expected_table
 
@@ -135,9 +148,9 @@ class TestList:
         result = self._test_list(cli_runner, requests_mock, False)
 
         expected_table = f"""\
-  id  name           events                              queues  active    url                             insecure_ssl
-----  -------------  --------------------------------  --------  --------  ------------------------------  --------------
- {HOOK_ID}  {HOOK_NAME}  {", ".join(e for e in EVENTS)}     {QUEUE_ID}  {ACTIVE}      {CONFIG_URL}  False
+  id  name           events                              queues  active    url                             insecure_ssl    sideload
+----  -------------  --------------------------------  --------  --------  ------------------------------  --------------  ----------
+ {HOOK_ID}  {HOOK_NAME}  {", ".join(e for e in EVENTS)}     {QUEUE_ID}  {ACTIVE}      {CONFIG_URL}  False           []
 """
         assert result.output == expected_table
 
@@ -159,6 +172,7 @@ class TestList:
             "active": ACTIVE,
             "events": EVENTS,
             "config": {"url": CONFIG_URL, "insecure_ssl": False},
+            "sideload": [],
         }
 
         if include_secret:
@@ -191,6 +205,7 @@ class TestChange:
                     "events": [self.new_event],
                     "active": True,
                     "config": {"url": CONFIG_URL, "secret": CONFIG_SECRET, "insecure_ssl": False},
+                    "sideload": ["queues"],
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -211,6 +226,8 @@ class TestChange:
                 CONFIG_URL,
                 "--config-secret",
                 CONFIG_SECRET,
+                "-s",
+                "queues",
             ],
         )
 

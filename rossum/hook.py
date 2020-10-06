@@ -23,6 +23,7 @@ def cli() -> None:
 @option.config_url
 @option.config_insecure_ssl
 @option.config_secret
+@option.sideload
 @click.pass_context
 def create_command(
     ctx: click.Context,
@@ -33,6 +34,7 @@ def create_command(
     config_url: str,
     config_secret: str,
     config_insecure_ssl: bool,
+    sideload: Tuple[str, ...],
 ) -> None:
 
     with RossumClient(context=ctx.obj) as rossum:
@@ -53,9 +55,10 @@ def create_command(
             config_url=config_url,
             config_secret=config_secret,
             config_insecure_ssl=config_insecure_ssl,
+            sideload=list(sideload),
         )
         click.echo(
-            f"{response['id']}, {response['name']}, {response['queues']}, {response['events']}, {response['config']['url']}"
+            f"{response['id']}, {response['name']}, {response['queues']}, {response['events']}, {response['sideload']}, {response['config']['url']}"
         )
 
 
@@ -65,7 +68,7 @@ def list_command(ctx: click.Context,):
     with RossumClient(context=ctx.obj) as rossum:
         hooks_list = rossum.get_hooks((QUEUES,))
 
-    headers = ["id", "name", "events", "queues", "active", "url", "insecure_ssl"]
+    headers = ["id", "name", "events", "queues", "active", "url", "insecure_ssl", "sideload"]
 
     def get_row(hook: dict) -> List[str]:
         res = [
@@ -76,6 +79,7 @@ def list_command(ctx: click.Context,):
             hook["active"],
             hook["config"]["url"],
             hook["config"]["insecure_ssl"],
+            hook["sideload"],
         ]
         try:
             secret_key = hook["config"]["secret"]
@@ -102,6 +106,7 @@ def list_command(ctx: click.Context,):
 @option.config_url
 @option.config_secret
 @option.config_insecure_ssl
+@option.sideload
 @click.pass_context
 def change_command(
     ctx: click.Context,
@@ -113,8 +118,11 @@ def change_command(
     config_url: str,
     config_secret: str,
     config_insecure_ssl: bool,
+    sideload: Tuple[str, ...],
 ) -> None:
-    if not any([queue_ids, name, active, events, config_url, config_secret, config_insecure_ssl]):
+    if not any(
+        [queue_ids, name, active, events, config_url, config_secret, config_insecure_ssl, sideload]
+    ):
         return
 
     data: Dict[str, Any] = {"config": {}}
@@ -134,6 +142,8 @@ def change_command(
             data["config"].update({"secret": config_secret})
         if config_insecure_ssl is not None:
             data["config"].update({"insecure_ssl": config_insecure_ssl})
+        if sideload:
+            data["sideload"] = list(sideload)
 
         rossum.patch(f"hooks/{id_}", data)
 

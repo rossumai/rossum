@@ -450,6 +450,7 @@ class RossumClient(APIClient):
         config_url: str,
         config_secret: str,
         config_insecure_ssl: bool,
+        sideload: List[str],
     ) -> dict:
 
         data = {
@@ -462,6 +463,7 @@ class RossumClient(APIClient):
                 "secret": config_secret,
                 "insecure_ssl": config_insecure_ssl,
             },
+            "sideload": sideload,
         }
         return get_json(self.post("hooks", data))
 

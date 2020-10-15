@@ -116,6 +116,15 @@ config_url = click.option(
     help="URL endpoint where the message from the hook should be pushed.",
 )
 
+sideload = click.option(
+    "-s",
+    "--sideload",
+    default=[],
+    type=str,
+    multiple=True,
+    help="List of related objects that should be included in the hook request.",
+)
+
 config_secret = click.option(
     "--config-secret", type=str, default=None, help="Secret key for authorization of payloads."
 )

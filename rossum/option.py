@@ -180,10 +180,7 @@ config_code = click.option(
 )
 
 config_runtime = click.option(
-    "--config-runtime",
-    type=str,
-    help="Runtime used to execute code. Allowed values: nodejs12.x.",
-    cls=OptionRequiredIf,
+    "--config-runtime", type=str, help="Runtime used to execute code.", cls=OptionRequiredIf
 )
 
 sideload = click.option(

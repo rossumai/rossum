@@ -109,11 +109,78 @@ events = click.option(
     help="List of events, when the hook should be notified.",
 )
 
+
+class OptionRequiredIf(click.Option):
+    def full_process_value(self, ctx, value):
+        value = super(OptionRequiredIf, self).full_process_value(ctx, value)
+        option = self.human_readable_name
+
+        required_params = {
+            "webhook": {
+                "mutually_exclusive": "function",
+                "config": ["config_url", "config_secret", "config_insecure_ssl"],
+            },
+            "function": {
+                "mutually_exclusive": "webhook",
+                "config": ["config_runtime", "config_code"],
+            },
+        }
+        if value is None:
+            expected_params = required_params.get(ctx.params["hook_type"], [])
+            for opt in expected_params["config"]:
+                if option in expected_params["config"]:
+                    if opt not in [key for key in ctx.params.keys()]:
+                        msg = f"Required if hook type is {ctx.params['hook_type']}"
+                        raise click.MissingParameter(ctx=ctx, message=msg)
+            for opt in required_params[expected_params["mutually_exclusive"]]["config"]:
+                if opt in [key for key in ctx.params.keys()]:
+                    if ctx.params.get(opt) is not None:
+                        non_valid_param = opt
+                        msg = f"Illegal usage: --{non_valid_param} cannot be used for the hook type {ctx.params['hook_type']}"
+                        raise click.UsageError(ctx=ctx, message=msg)
+
+        return value
+
+
+hook_type = click.option(
+    "-t",
+    "--hook-type",
+    required=True,
+    type=click.Choice(["function", "webhook"]),
+    help="Hook type. Possible values: webhook, function.",
+)
+
+
 config_url = click.option(
     "--config-url",
-    required=True,
     type=str,
     help="URL endpoint where the message from the hook should be pushed.",
+    cls=OptionRequiredIf,
+)
+
+config_secret = click.option(
+    "--config-secret",
+    type=str,
+    help="Secret key for authorization of payloads.",
+    cls=OptionRequiredIf,
+)
+
+config_insecure_ssl = click.option(
+    "--config-insecure-ssl",
+    type=bool,
+    help="Disable SSL certificate verification. (Use only for testing purposes.)",
+    cls=OptionRequiredIf,
+)
+
+config_code = click.option(
+    "--config-code",
+    type=click.Path(readable=True),
+    help="Path to the file with the string-serialized source code to be executed.",
+    cls=OptionRequiredIf,
+)
+
+config_runtime = click.option(
+    "--config-runtime", type=str, help="Runtime used to execute code.", cls=OptionRequiredIf
 )
 
 sideload = click.option(
@@ -123,17 +190,6 @@ sideload = click.option(
     type=str,
     multiple=True,
     help="List of related objects that should be included in the hook request.",
-)
-
-config_secret = click.option(
-    "--config-secret", type=str, default=None, help="Secret key for authorization of payloads."
-)
-
-config_insecure_ssl = click.option(
-    "--config_insecure_ssl",
-    type=bool,
-    default=False,
-    help="Disable SSL certificate verification. (Use only for testing purposes.)",
 )
 
 

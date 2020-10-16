@@ -444,26 +444,22 @@ class RossumClient(APIClient):
     def create_hook(
         self,
         name: str,
+        hook_type: str,
         queues: List[str],
         active: bool,
         events: List[str],
-        config_url: str,
-        config_secret: str,
-        config_insecure_ssl: bool,
         sideload: List[str],
+        config: Dict,
     ) -> dict:
 
         data = {
             "name": name,
+            "type": hook_type,
             "queues": queues,
             "active": active,
             "events": events,
-            "config": {
-                "url": config_url,
-                "secret": config_secret,
-                "insecure_ssl": config_insecure_ssl,
-            },
             "sideload": sideload,
+            "config": config,
         }
         return get_json(self.post("hooks", data))
 

@@ -29,7 +29,8 @@ class TestCreate:
         requests_mock.post(
             WORKSPACES_URL,
             additional_matcher=partial(
-                match_uploaded_json, {"name": name, "organization": ORGANIZATION_URL}
+                match_uploaded_json,
+                {"name": name, "organization": ORGANIZATION_URL, "metadata": None},
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
             status_code=201,

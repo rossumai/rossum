@@ -355,6 +355,12 @@ class RossumClient(APIClient):
             click.echo(" Processing failed.")
         return annotation_object
 
+    def create_workspace(
+        self, name: str, organization: str, metadata: Optional[Dict] = None
+    ) -> dict:
+        data = {"name": name, "organization": organization, "metadata": metadata}
+        return get_json(self.post("workspaces", data))
+
     def create_schema(self, name: str, content: List[dict]) -> dict:
         return get_json(self.post(SCHEMAS, data={"name": name, "content": content}))
 

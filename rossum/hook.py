@@ -1,10 +1,23 @@
 from typing import Tuple, Optional, Dict, Any, List
 
 import click
+from pathlib import Path
 from rossum import option, argument
 from rossum.lib import QUEUES
 from rossum.lib.api_client import RossumClient
 from tabulate import tabulate
+
+
+def cleanup_config(config: Dict) -> Dict:
+    new_config = {}
+    for key, value in config.items():
+        if key.startswith("config_"):
+            new_key = key.replace("config_", "")
+            new_config[new_key] = value
+    config = {key: value for key, value in new_config.items() if value is not None}
+    if "code" in config.keys():
+        config["code"] = Path(config["code"]).read_text()
+    return config
 
 
 @click.group("hook")
@@ -14,6 +27,7 @@ def cli() -> None:
 
 @cli.command(name="create", help="Create a hook object.")
 @argument.name
+@option.hook_type
 @option.queue(
     help="Queue IDs, that the hook will be associated with. "
     "Required field - will be assigned to an only queue automatically if not specified."
@@ -23,18 +37,19 @@ def cli() -> None:
 @option.config_url
 @option.config_insecure_ssl
 @option.config_secret
+@option.config_code
+@option.config_runtime
 @option.sideload
 @click.pass_context
 def create_command(
     ctx: click.Context,
     name: str,
+    hook_type: str,
     queue_ids: Tuple[int, ...],
     active: bool,
     events: Tuple[str, ...],
-    config_url: str,
-    config_secret: str,
-    config_insecure_ssl: bool,
     sideload: Tuple[str, ...],
+    **kwargs,
 ) -> None:
 
     with RossumClient(context=ctx.obj) as rossum:
@@ -47,18 +62,30 @@ def create_command(
                 if queue_dict:
                     queue_urls.append(queue_dict["url"])
 
+        config = {**kwargs}
+        config = cleanup_config(config)
+
         response = rossum.create_hook(
             name=name,
+            hook_type=hook_type,
             queues=queue_urls,
             active=active,
             events=list(events),
-            config_url=config_url,
-            config_secret=config_secret,
-            config_insecure_ssl=config_insecure_ssl,
             sideload=list(sideload),
+            config=config,
         )
+
+        additional_fields = [
+            value
+            for key, value in response["config"].items()
+            if key not in ["code", "runtime", "insecure_ssl"]
+        ]
+
+        regular_fields = f"{response['id']}, {response['name']}, {response['queues']}, {response['events']}, {response['sideload']}"
         click.echo(
-            f"{response['id']}, {response['name']}, {response['queues']}, {response['events']}, {response['sideload']}, {response['config']['url']}"
+            regular_fields + ", " + f"{', '.join(map(str, additional_fields))}"
+            if additional_fields != []
+            else regular_fields
         )
 
 
@@ -68,29 +95,30 @@ def list_command(ctx: click.Context,):
     with RossumClient(context=ctx.obj) as rossum:
         hooks_list = rossum.get_hooks((QUEUES,))
 
-    headers = ["id", "name", "events", "queues", "active", "url", "insecure_ssl", "sideload"]
+    headers = ["id", "name", "events", "queues", "active", "sideload"]
 
     def get_row(hook: dict) -> List[str]:
-        res = [
+        fields = [
             hook["id"],
             hook["name"],
             ", ".join(e for e in hook["events"]),
             ", ".join(str(q.get("id", "")) for q in hook["queues"]),
             hook["active"],
-            hook["config"]["url"],
-            hook["config"]["insecure_ssl"],
             hook["sideload"],
         ]
-        try:
-            secret_key = hook["config"]["secret"]
-        except KeyError:
-            pass
-        else:
-            res.append(secret_key)
-            if "secret" not in headers:
-                headers.append("secret")
 
-        return res
+        additional = ["url", "insecure_ssl", "secret"]
+
+        for field in additional:
+            if field in hook["config"]:
+                fields.append(hook["config"][field])
+
+        for header in additional:
+            if header not in headers:
+                headers.append(header)
+
+        hook_list = [item for item in fields]
+        return hook_list
 
     table = [get_row(hook) for hook in hooks_list]
 
@@ -101,11 +129,14 @@ def list_command(ctx: click.Context,):
 @argument.id_
 @option.queue(related_object="hook")
 @option.name
+@option.hook_type
 @option.events
 @option.active
 @option.config_url
 @option.config_secret
 @option.config_insecure_ssl
+@option.config_code
+@option.config_runtime
 @option.sideload
 @click.pass_context
 def change_command(
@@ -113,16 +144,17 @@ def change_command(
     id_: int,
     queue_ids: Tuple[int, ...],
     name: Optional[str],
+    hook_type: str,
     events: Tuple[str, ...],
     active: Optional[bool],
-    config_url: str,
-    config_secret: str,
-    config_insecure_ssl: bool,
     sideload: Tuple[str, ...],
+    **kwargs,
 ) -> None:
-    if not any(
-        [queue_ids, name, active, events, config_url, config_secret, config_insecure_ssl, sideload]
-    ):
+
+    config = {**kwargs}
+    config = cleanup_config(config)
+
+    if not any([queue_ids, name, active, events, sideload, config]):
         return
 
     data: Dict[str, Any] = {"config": {}}
@@ -132,16 +164,14 @@ def change_command(
             data["queues"] = [rossum.get_queue(queue)["url"] for queue in queue_ids]
         if name is not None:
             data["name"] = name
+        if hook_type:
+            data["type"] = hook_type
         if active is not None:
             data["active"] = active
         if events:
             data["events"] = list(events)
-        if config_url is not None:
-            data["config"].update({"url": config_url})
-        if config_secret is not None:
-            data["config"].update({"secret": config_secret})
-        if config_insecure_ssl is not None:
-            data["config"].update({"insecure_ssl": config_insecure_ssl})
+        if config:
+            data["config"] = config
         if sideload:
             data["sideload"] = list(sideload)
 

@@ -5,7 +5,7 @@ from tabulate import tabulate
 
 from rossum import argument, option
 from rossum.lib import QUEUES
-from rossum.lib.api_client import RossumClient, get_json
+from rossum.lib.api_client import RossumClient
 
 
 @click.group("workspace")
@@ -21,9 +21,9 @@ def create_command(ctx: click.Context, name: str, organization_id: Optional[int]
     with RossumClient(context=ctx.obj) as rossum:
         organization_url = rossum.get_organization(organization_id)["url"]
 
-        res = rossum.post("workspaces", {"name": name, "organization": organization_url})
-    workspace_dict = get_json(res)
-    click.echo(workspace_dict["id"])
+        workspace_response = rossum.create_workspace(name, organization_url)
+
+    click.echo(workspace_response["id"])
 
 
 @cli.command(name="list", help="List all workspaces.")

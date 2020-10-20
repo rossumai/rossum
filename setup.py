@@ -27,7 +27,6 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Obsoletes-Dist :: elisctl",
     ],
     packages=find_packages(exclude=("tests*",)),
     install_requires=[

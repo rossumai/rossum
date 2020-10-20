@@ -201,6 +201,9 @@ MIT
     ``` 
    
 ## Changelog
+### 2020-10-20 v3.2.1
+* Remove Obsoletes-Dist
+
 ### 2020-10-20 v3.2.0
 * Enable creating serverless functions
 * Add method for creating workspaces

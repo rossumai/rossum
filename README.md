@@ -201,6 +201,11 @@ MIT
     ``` 
    
 ## Changelog
+### 2020-10-20 v3.2.0
+* Enable creating serverless functions
+* Add method for creating workspaces
+* Allow setting up sideloading on hooks
+* Refactor _request_url() to allow custom logging
 
 ### 2020-09-29 v3.1.0
 * Fix missing library in setup.py

@@ -357,8 +357,10 @@ class RossumClient(APIClient):
 
     def create_workspace(
         self, name: str, organization: str, metadata: Optional[Dict] = None
-    ) -> dict:
-        data = {"name": name, "organization": organization, "metadata": metadata}
+    ) -> Dict[str, Any]:
+        data = {"name": name, "organization": organization}  # type: Dict[str, Any]
+        if metadata:
+            data.update({"metadata": metadata})
         return get_json(self.post("workspaces", data))
 
     def create_schema(self, name: str, content: List[dict]) -> dict:

@@ -21,6 +21,7 @@ from tests.conftest import (
     match_uploaded_data,
     match_uploaded_json,
     match_uploaded_values,
+    WORKSPACES_URL,
 )
 
 UPLOADED_DOC = f"{DOCUMENTS_URL}/12345"
@@ -35,6 +36,8 @@ PAGE_ID = 4210254
 PAGE_URL = f"{PAGES_URL}/{PAGE_ID}"
 ANNOTATION_ID = 1863864
 ANNOTATION_URL = f"{ANNOTATIONS_URL}/{ANNOTATION_ID}"
+ORGANIZATION_ID = 1
+ORGANIZATION_URL = f"{ORGANIZATIONS_URL}/{ORGANIZATION_ID}"
 
 
 @pytest.mark.usefixtures("rossum_credentials")
@@ -233,3 +236,22 @@ class TestRossumClient:
         )
 
         assert api_response == self.api_client.set_metadata(ANNOTATIONS, ANNOTATION_ID, metadata)
+
+    @pytest.mark.usefixtures("mock_login_request")
+    def test_create_workspace(self, requests_mock):
+        name = "TestName"
+        metadata = {"customer-id": "some-customer-id"}
+
+        api_response = {"name": name, "organization": ORGANIZATION_URL, "metadata": metadata}
+
+        requests_mock.post(
+            WORKSPACES_URL,
+            additional_matcher=partial(
+                match_uploaded_json,
+                {"name": name, "organization": ORGANIZATION_URL, "metadata": metadata},
+            ),
+            request_headers={"Authorization": f"Token {TOKEN}"},
+            status_code=201,
+            json=api_response,
+        )
+        assert api_response == self.api_client.create_workspace(name, ORGANIZATION_URL, metadata)

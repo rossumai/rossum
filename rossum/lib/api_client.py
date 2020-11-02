@@ -432,6 +432,18 @@ class RossumClient(APIClient):
             )
         )
 
+    def change_user_password(self, new_password: str) -> dict:
+        data = {
+            "new_password1": new_password,
+            "new_password2": new_password,
+            "old_password": self.password,
+        }
+        return get_json(self.post("auth/password/change", data, expected_status_code=200))
+
+    def reset_user_password(self, email: str) -> dict:
+        data = {"email": email}
+        return get_json(self.post("auth/password/reset", data, expected_status_code=200))
+
     def create_connector(
         self,
         name: str,

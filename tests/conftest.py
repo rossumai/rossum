@@ -27,6 +27,8 @@ GROUPS_URL = f"{API_URL}/v1/groups"
 LOGIN_URL = f"{API_URL}/v1/auth/login"
 CONNECTORS_URL = f"{API_URL}/v1/connectors"
 HOOKS_URL = f"{API_URL}/v1/hooks"
+CHANGE_PASSWORD_URL = f"{API_URL}/v1/auth/password/change"
+RESET_PASSWORD_URL = f"{API_URL}/v1/auth/password/reset"
 
 REQUEST_HEADERS = {"User-Agent": f"rossum/{__version__} ({platform()})"}
 

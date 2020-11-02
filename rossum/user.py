@@ -74,22 +74,14 @@ def list_command(ctx: click.Context,):
 @option.queue(related_object="user")
 @option.group(default=None, show_default=False)
 @option.locale(default=None, show_default=False)
-@option.password(help=None)
 @click.pass_context
 def change_command(
-    ctx: click.Context,
-    id_: int,
-    queue_ids: Tuple[int],
-    group: Optional[str],
-    locale: Optional[str],
-    password: Optional[str],
+    ctx: click.Context, id_: int, queue_ids: Tuple[int], group: Optional[str], locale: Optional[str]
 ) -> None:
-    if not any([queue_ids, group, locale, password]):
+    if not any([queue_ids, group, locale]):
         return
 
     data: Dict[str, Any] = {}
-    if password is not None:
-        data["password"] = password
 
     with RossumClient(context=ctx.obj) as rossum:
         if queue_ids:

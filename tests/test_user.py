@@ -198,7 +198,6 @@ class TestChange:
             "queues": [f"{QUEUES_URL}/{queue_id}"],
             "groups": [f"{GROUPS_URL}/2"],
             "ui_settings": {"locale": locale},
-            "password": "new_password",
         }
         user_id = "1"
 
@@ -208,8 +207,7 @@ class TestChange:
         )
 
         result = cli_runner.invoke(
-            change_command,
-            [user_id, "-q", queue_id, "-g", "admin", "-l", locale, "-p", data["password"]],
+            change_command, [user_id, "-q", queue_id, "-g", "admin", "-l", locale]
         )
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert not result.output
@@ -285,7 +283,7 @@ def mock_user_urls(requests_mock):
         json={"pagination": {"total": 0, "next": None}, "results": []},
     )
 
-    requests_mock.get(f"{API_URL}/v1/auth/user", json={"url": f"{USERS_URL}/1"})
+    requests_mock.get(f"{API_URL}/v1/auth/user", json={"url": f"{USERS_URL}/1", "id": 1})
 
 
 @pytest.fixture

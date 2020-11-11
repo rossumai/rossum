@@ -201,6 +201,10 @@ MIT
     ``` 
    
 ## Changelog
+### 2020-11-11 v3.3.0
+* Allow passing parameters when listing hooks
+* Fix passing metadata when creating a workspace
+
 ### 2020-10-20 v3.2.1
 * Remove Obsoletes-Dist
 

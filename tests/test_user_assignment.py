@@ -12,7 +12,7 @@ from tests.conftest import QUEUES_URL, TOKEN, USERS_URL, match_uploaded_json
 class TestList:
     queue_ids = ["1", "2"]
     name = "TestQueue"
-    user_ids = ["5", "4"]
+    user_ids = [5, 4]
     user_urls = [f"{USERS_URL}/{id_}" for id_ in user_ids]
     queue_urls = [f"{QUEUES_URL}/{id_}" for id_ in queue_ids]
 
@@ -95,7 +95,7 @@ class TestAdd:
     orig_queue_url = f"{QUEUES_URL}/1"
     new_queue_id = "2"
     new_queue_url = f"{QUEUES_URL}/{new_queue_id}"
-    user_id = "3"
+    user_id = 3
     user_url = f"{USERS_URL}/{user_id}"
 
     def test_success(self, requests_mock, cli_runner):
@@ -109,7 +109,7 @@ class TestAdd:
             request_headers={"Authorization": f"Token {TOKEN}"},
             status_code=200,
         )
-        result = cli_runner.invoke(add_command, ["-q", self.new_queue_id, "-u", self.user_id])
+        result = cli_runner.invoke(add_command, ["-q", self.new_queue_id, "-u", f"{self.user_id}"])
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert not result.output
 
@@ -130,7 +130,7 @@ class TestRemoveQueues:
     orig_queue_url = f"{QUEUES_URL}/{orig_queue_id}"
     removed_queue_id = "2"
     removed_queue_url = f"{QUEUES_URL}/{removed_queue_id}"
-    user_id = "3"
+    user_id = 3
     user_url = f"{USERS_URL}/{user_id}"
 
     def test_success(self, requests_mock, cli_runner):
@@ -152,7 +152,7 @@ class TestRemoveQueues:
             status_code=200,
         )
         result = cli_runner.invoke(
-            remove_command, ["-q", self.removed_queue_id, "-u", self.user_id]
+            remove_command, ["-q", self.removed_queue_id, "-u", f"{self.user_id}"]
         )
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert not result.output

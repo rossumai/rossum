@@ -15,6 +15,7 @@ from rossum import (
     CTX_DEFAULT_PROFILE,
     CTX_PROFILE,
     user_assignment,
+    password,
 )
 
 
@@ -47,3 +48,4 @@ entry_point.add_command(document.cli)
 entry_point.add_command(connector.cli)
 entry_point.add_command(hook.cli)
 entry_point.add_command(configure.cli)
+entry_point.add_command(password.cli)

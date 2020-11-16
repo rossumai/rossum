@@ -198,9 +198,8 @@ class TestChange:
             "queues": [f"{QUEUES_URL}/{queue_id}"],
             "groups": [f"{GROUPS_URL}/2"],
             "ui_settings": {"locale": locale},
-            "password": "new_password",
         }
-        user_id = "1"
+        user_id = 1
 
         requests_mock.get(f"{USERS_URL}/{user_id}", json={"ui_settings": {}})
         requests_mock.patch(
@@ -208,8 +207,7 @@ class TestChange:
         )
 
         result = cli_runner.invoke(
-            change_command,
-            [user_id, "-q", queue_id, "-g", "admin", "-l", locale, "-p", data["password"]],
+            change_command, [f"{user_id}", "-q", queue_id, "-g", "admin", "-l", locale]
         )
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert not result.output
@@ -222,13 +220,13 @@ class TestChange:
 @pytest.mark.usefixtures("mock_login_request", "rossum_credentials")
 class TestDelete:
     def test_success(self, requests_mock, cli_runner):
-        user_id = "1"
+        user_id = 1
         requests_mock.patch(
             f"{USERS_URL}/{user_id}",
             additional_matcher=partial(match_uploaded_json, {"is_active": False}),
         )
 
-        result = cli_runner.invoke(delete_command, [user_id, "--yes"])
+        result = cli_runner.invoke(delete_command, [f"{user_id}", "--yes"])
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert not result.output
 
@@ -285,7 +283,7 @@ def mock_user_urls(requests_mock):
         json={"pagination": {"total": 0, "next": None}, "results": []},
     )
 
-    requests_mock.get(f"{API_URL}/v1/auth/user", json={"url": f"{USERS_URL}/1"})
+    requests_mock.get(f"{API_URL}/v1/auth/user", json={"url": f"{USERS_URL}/1", "id": 1})
 
 
 @pytest.fixture

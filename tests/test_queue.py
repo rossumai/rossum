@@ -208,7 +208,7 @@ class TestList:
         inbox_url = f"{INBOXES_URL}/2"
         schema_id = 3
         schema_url = f"{SCHEMAS_URL}/{schema_id}"
-        user_ids = ["4", "5"]
+        user_ids = [4, 5]
         user_urls = [f"{USERS_URL}/{id_}" for id_ in user_ids]
         connector_id = 2000
         hook_ids = ["101", "202"]
@@ -285,7 +285,7 @@ class TestList:
         expected_table = f"""\
   id  name         workspace  inbox               schema  users    connector                                         hooks
 ----  ---------  -----------  ----------------  --------  -------  ------------------------------------------------  --------
-   {queue_id}  {name}            {workspace_id}  {inbox}         {schema_id}  {', '.join(user_ids)}     {connector_url}  {', '.join(hook_ids)}
+   {queue_id}  {name}            {workspace_id}  {inbox}         {schema_id}  {', '.join([str(x) for x in user_ids])}     {connector_url}  {', '.join(hook_ids)}
 """
         assert result.output == expected_table
 

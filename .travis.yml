@@ -55,13 +55,11 @@ jobs:
       python: 3.7
       deploy:
         provider: pypi
+        edge: true
         user: rossum
         password: ${PYPI_DEPLOY_PASSWORD}
         on:
           tags: true
-        edge:
-          source: 'native-api/dpl'
-          branch: 'pip_fix_upgrade_deps'
 
 
 install:

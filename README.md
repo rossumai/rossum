@@ -201,6 +201,9 @@ MIT
     ``` 
    
 ## Changelog
+### 2020-11-16 v3.4.0
+* Create password command
+
 ### 2020-11-11 v3.3.0
 * Allow passing parameters when listing hooks
 * Fix passing metadata when creating a workspace

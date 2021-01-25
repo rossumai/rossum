@@ -55,6 +55,7 @@ class APIClient(AbstractContextManager):
         self._profile = (context or {}).get(CTX_PROFILE, CTX_DEFAULT_PROFILE)
 
         self.token: Optional[str] = None
+        self.timeout: Optional[float] = None
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.logout()
@@ -130,7 +131,13 @@ class APIClient(AbstractContextManager):
         auth = self._authentication
         headers = {**HEADERS, **auth.pop("headers", {}), **kwargs.pop("headers", {})}
         response = requests.request(
-            method, url, params=_encode_booleans(query), headers=headers, **auth, **kwargs
+            method,
+            url,
+            params=_encode_booleans(query),
+            headers=headers,
+            timeout=self.timeout,
+            **auth,
+            **kwargs,
         )
         return response
 

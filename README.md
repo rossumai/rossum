@@ -201,6 +201,11 @@ MIT
     ``` 
    
 ## Changelog
+### 2021-01-25 v3.5.0
+* Allow setting custom timeout for APIClient requests
+* Use openpyxl engine for xlsx files reading
+* Apply minor code optimalization fixes
+
 ### 2020-11-16 v3.4.0
 * Create password command
 

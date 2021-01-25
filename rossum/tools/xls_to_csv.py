@@ -46,6 +46,7 @@ def cli(
         dtype=(str, str),
         header=header,
         skiprows=skiprows_list,
+        engine="openpyxl",
     )
     df = df[list(cols.keys())]
     with StringIO() as buffer:

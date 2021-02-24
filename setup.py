@@ -43,6 +43,7 @@ setup(
         "jmespath",
         "polling2",
         "more_itertools",
+        "tenacity",
     ],
     python_requires=">=3.6",
     setup_requires=["pytest-runner"],

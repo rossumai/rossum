@@ -382,8 +382,15 @@ class RossumClient(APIClient):
         hooks_urls: Optional[List] = None,
         locale: Optional[str] = None,
         rir_url: str = "https://all.rir.rossum.ai",
+        rir_params: str = "",
     ) -> dict:
-        data = {"name": name, "workspace": workspace_url, "schema": schema_url, "rir_url": rir_url}
+        data = {
+            "name": name,
+            "workspace": workspace_url,
+            "schema": schema_url,
+            "rir_url": rir_url,
+            "rir_params": rir_params,
+        }
         if connector_url is not None:
             data[CONNECTORS.singular] = connector_url
         if hooks_urls is not None:

@@ -52,6 +52,7 @@ class QueueFixtures:
             "workspace": WORKSPACE_URL,
             "schema": SCHEMA_URL,
             "rir_url": "https://all.rir.rossum.ai",
+            "rir_params": "",
             "hooks": [],
         }
         requests_mock.post(
@@ -178,6 +179,7 @@ class TestCreate(QueueFixtures):
             "workspace": WORKSPACE_URL,
             "schema": SCHEMA_URL,
             "rir_url": "https://all.rir.rossum.ai",
+            "rir_params": "",
             "hooks": [f"{HOOKS_URL}/{id_}" for id_ in hooks],
         }
 

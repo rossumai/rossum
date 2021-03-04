@@ -201,6 +201,9 @@ MIT
     ``` 
    
 ## Changelog
+### 2021-03-04 v3.6.0
+* Allow setting rir_params for queues
+
 ### 2021-01-25 v3.5.0
 * Allow setting custom timeout for APIClient requests
 * Use openpyxl engine for xlsx files reading

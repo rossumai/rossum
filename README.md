@@ -201,6 +201,10 @@ MIT
     ``` 
    
 ## Changelog
+### 2021-04-01 v3.7.0
+* Applied configurable retry mechanism to all requests done via rossum library
+* Enable assigning annotator_limited role to user
+
 ### 2021-03-04 v3.6.0
 * Allow setting rir_params for queues
 

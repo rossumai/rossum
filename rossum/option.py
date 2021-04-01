@@ -196,7 +196,7 @@ sideload = click.option(
 def group(command: Optional[Callable] = None, **kwargs):
     default_kwargs = {
         "default": "annotator",
-        "type": click.Choice(["annotator", "admin", "manager", "viewer"]),
+        "type": click.Choice(["annotator", "annotator_limited", "admin", "manager", "viewer"]),
         "help": "Permission group.",
         "show_default": True,
     }

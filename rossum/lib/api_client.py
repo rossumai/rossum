@@ -3,12 +3,20 @@ import sys
 from contextlib import AbstractContextManager
 from pathlib import PurePath
 from platform import platform
+from typing import Any, BinaryIO, Callable, Dict, IO, Iterable, List, Optional, Tuple, Union
 
 import click
 import polling2
 import requests
+import urllib3
 from requests import Response
-from typing import Any, BinaryIO, Callable, Dict, IO, Iterable, List, Optional, Tuple, Union
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    stop_after_delay,
+    wait_fixed,
+    retry_if_exception_type,
+)
 
 from rossum import __version__, CTX_PROFILE, CTX_DEFAULT_PROFILE
 from rossum.configure import get_credential
@@ -45,7 +53,25 @@ class APIClient(AbstractContextManager):
         use_api_version: bool = True,
         auth_using_token: bool = True,
         max_token_lifetime: Optional[int] = None,
+        retry_logic_rules: Optional[Dict] = None,
     ):
+        """The APIClient for communication with Rossum API.
+
+        :param context Used for switching profile. Send None for usual requests done for your default profile.
+        :param url Rossum API URL. Leave None for communication with the currently used publicly available Rossum API.
+        :param user Your username.
+        :param password Your password.
+        :param use_api_version Leave True if you want to use the latest API version. If set to false,
+        specify the Rossum API URL including its version in the url parameter explicitly.
+        :param auth_using_token To avoid using login request for each call, leave set to True.
+        :param max_token_lifetime Set custom max token lifetime in seconds. Default is the maximum lifetime: 583200s
+        or until the Rossum client logs out. Logging out is made when CLI is exited or if RossumClient() is used
+        with a with statement.
+        :param retry_logic_rules Pass logic rules for built-in retry mechanism that is called when it is currently
+        not possible to communicate with Rossum API. The default shape of the dictionary is:
+        {"attempts": 3, "wait_s": 5}. "attempts" key states the number of retry attempts. "wait_s" is time in seconds
+        the APIClient will wait before retrying again.
+        """
         self._url = url
         self._user = user
         self._password = password
@@ -56,6 +82,8 @@ class APIClient(AbstractContextManager):
 
         self.token: Optional[str] = None
         self.timeout: Optional[float] = None
+
+        self._retry_logic_rules = self.get_retry_logic(retry_logic_rules)
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.logout()
@@ -85,12 +113,36 @@ class APIClient(AbstractContextManager):
             self._url = f'{_url}{"/v1" if self._use_api_version else ""}'
         return self._url
 
+    @staticmethod
+    def get_retry_logic(retry_logic_rules: Optional[Dict]):
+        retry_logic_rules = retry_logic_rules or {}
+        attempts_no = retry_logic_rules.get("attempts", 3)
+        wait_s = retry_logic_rules.get("wait_s", 5)
+        retry_logic = {
+            "reraise": True,
+            "stop": (stop_after_attempt(attempts_no) | stop_after_delay(55)),
+            "wait": wait_fixed(wait_s),
+            "retry": (
+                retry_if_exception_type(requests.exceptions.ProxyError)
+                | retry_if_exception_type(requests.exceptions.ConnectionError)
+                | retry_if_exception_type(urllib3.exceptions.NewConnectionError)
+                | retry_if_exception_type(urllib3.exceptions.ConnectTimeoutError)
+            ),
+        }
+        return retry_logic
+
+    def _login_to_api(self, login_data: Dict) -> Response:
+        return requests.post(
+            f"{self.url}/auth/login", json=login_data, timeout=self.timeout, headers=HEADERS
+        )
+
     def get_token(self) -> str:
         # self.post cannot be used as it is dependent on self.get_token().
         login_data: Dict[str, Union[str, int]] = {"username": self.user, "password": self.password}
         if self._max_token_lifetime:
             login_data["max_token_lifetime_s"] = self._max_token_lifetime
-        response = requests.post(f"{self.url}/auth/login", json=login_data, headers=HEADERS)
+        retry_request = retry(**self._retry_logic_rules)(self._login_to_api)
+        response = retry_request(login_data)
         if response.status_code == 401:
             raise RossumException(f"Login failed with the provided credentials.")
         elif not response.ok:
@@ -142,7 +194,8 @@ class APIClient(AbstractContextManager):
     def _request_url(
         self, method: str, url: str, query: dict = None, expected_status_code: int = 200, **kwargs
     ) -> Response:
-        response = self._do_request(method, url, query, **kwargs)
+        retry_request = retry(**self._retry_logic_rules)(self._do_request)
+        response = retry_request(method, url, query, **kwargs)
         if response.status_code != expected_status_code:
             raise RossumException(f"Invalid response [{response.url}]: {response.text}")
         return response

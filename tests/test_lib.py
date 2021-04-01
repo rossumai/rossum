@@ -3,6 +3,7 @@ from functools import partial
 
 import click
 import pytest
+import requests
 
 from rossum.lib import APIObject, ANNOTATIONS
 from rossum.lib.api_client import APIClient, RossumClient
@@ -255,3 +256,21 @@ class TestRossumClient:
             json=api_response,
         )
         assert api_response == self.api_client.create_workspace(name, ORGANIZATION_URL, metadata)
+
+
+@pytest.mark.usefixtures("rossum_credentials")
+class TestRetryMechanism:
+    api_client = RossumClient(None, retry_logic_rules={"attempts": 2, "wait_s": 0.1})
+
+    @pytest.mark.usefixtures("mock_login_request")
+    def test_retry_logic_if_api_responds_with_502(self, requests_mock):
+        user_json = {"user": 123}
+        get_user_called = requests_mock.get(
+            f"{API_URL}/v1/auth/user",
+            [
+                {"exc": requests.exceptions.ConnectionError("Connection refused")},
+                {"json": user_json, "status_code": 200},
+            ],
+        )
+        assert user_json == self.api_client.get_user()
+        assert get_user_called.call_count == 2

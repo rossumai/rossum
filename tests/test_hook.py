@@ -1,14 +1,15 @@
+import json
 import re
 from functools import partial
 from itertools import chain
 from pathlib import Path
 from traceback import print_tb, format_tb
+from typing import List
 
 import pytest
 
-from typing import List
 from rossum.hook import list_command, change_command, delete_command, create_command
-from tests.conftest import TOKEN, match_uploaded_json, QUEUES_URL, HOOKS_URL
+from tests.conftest import TOKEN, match_uploaded_json, QUEUES_URL, HOOKS_URL, USERS_URL
 
 QUEUES = ["1", "2"]
 QUEUE_ID = "12345"
@@ -25,6 +26,12 @@ CONFIG_CODE = str(ROOT_DIR / "tests" / "data" / "snippet_code.js")
 CONFIG_RUNTIME = "nodejs12.x"
 CONFIG_INSECURE_SSL = False
 ACTIVE = True
+TEST_PAYLOAD_TO_HOOK_FROM_CLI = '{"payload": {"action": "user_update"}}'
+TEST_PAYLOAD_TO_HOOK_TO_API = json.loads(TEST_PAYLOAD_TO_HOOK_FROM_CLI)
+TOKEN_OWNER_ID = 12345
+TOKEN_OWNER_URL = f"{USERS_URL}/{TOKEN_OWNER_ID}"
+RUN_AFTER_HOOK_ID = 999
+RUN_AFTER_URLS = [f"{HOOKS_URL}/{RUN_AFTER_HOOK_ID}"]
 
 
 def get_params(hook_type, value):
@@ -115,6 +122,9 @@ class TestCreate:
                     "events": EVENTS,
                     "config": config,
                     "sideload": ["queues"],
+                    "metadata": {},
+                    "run_after": [],
+                    "test": {},
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -127,6 +137,10 @@ class TestCreate:
                 "events": EVENTS,
                 "config": config,
                 "sideload": ["queues"],
+                "token_owner": None,
+                "metadata": {},
+                "run_after": [],
+                "test": {},
             },
         )
 
@@ -192,6 +206,10 @@ class TestCreate:
                 "events": EVENTS,
                 "config": config,
                 "sideload": ["queues"],
+                "token_owner": None,
+                "metadata": {},
+                "run_after": [],
+                "test": None,
             },
         )
 
@@ -306,6 +324,10 @@ class TestCreate:
                     "events": EVENTS,
                     "config": config,
                     "sideload": [],
+                    "token_owner": TOKEN_OWNER_URL,
+                    "metadata": {},
+                    "run_after": RUN_AFTER_URLS,
+                    "test": TEST_PAYLOAD_TO_HOOK_TO_API,
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -318,6 +340,10 @@ class TestCreate:
                 "events": EVENTS,
                 "config": config,
                 "sideload": [],
+                "token_owner": TOKEN_OWNER_URL,
+                "metadata": {},
+                "run_after": RUN_AFTER_URLS,
+                "test": TEST_PAYLOAD_TO_HOOK_TO_API,
             },
         )
 
@@ -331,7 +357,18 @@ class TestCreate:
             create_command,
             [HOOK_NAME]
             + list(chain.from_iterable(("-e", e) for e in EVENTS))
-            + ["--active", ACTIVE, "--hook-type", hook_type]
+            + [
+                "--active",
+                ACTIVE,
+                "--hook-type",
+                hook_type,
+                "--token-owner",
+                TOKEN_OWNER_ID,
+                "--run-after",
+                RUN_AFTER_HOOK_ID,
+                "--test",
+                TEST_PAYLOAD_TO_HOOK_FROM_CLI,
+            ]
             + get_options(hook_type, config, tmp_path),
         )
         assert not result.exit_code, print_tb(result.exc_info[2])
@@ -339,6 +376,39 @@ class TestCreate:
             f"{HOOK_ID}, {HOOK_NAME}, ['{DEFAULT_QUEUE_URL}'], {EVENTS}, []{expected}\n"
             == result.output
         )
+
+    def test_passing_invalid_json_string(self, requests_mock, cli_runner, tmp_path):
+
+        requests_mock.get(
+            re.compile(fr"{QUEUES_URL}/\d$"),
+            json=lambda request, context: {"url": request.url},
+            request_headers={"Authorization": f"Token {TOKEN}"},
+        )
+
+        result = cli_runner.invoke(
+            create_command,
+            [HOOK_NAME]
+            + list(chain.from_iterable(("-q", q) for q in QUEUES))
+            + list(chain.from_iterable(("-e", e) for e in EVENTS))
+            + get_options(
+                "webhook",
+                {"url": "https://someurl.ai", "secret": "secret", "insecure_ssl": "false"},
+                tmp_path,
+            )
+            + [
+                "--active",
+                ACTIVE,
+                "--hook-type",
+                "webhook",
+                "--sideload",
+                "queues",
+                "--test",
+                "{'config': 'incorrect json'}",
+            ],
+        )
+
+        assert not result.exit_code, print_tb(result.exc_info[2])
+        assert result.output == "Could not parse value for --test. Did you pass a valid JSON?\n"
 
 
 @pytest.mark.usefixtures("mock_login_request", "rossum_credentials")
@@ -385,6 +455,10 @@ class TestList:
             "events": EVENTS,
             "config": config,
             "sideload": ["queues"],
+            "token_owner": None,
+            "metadata": {},
+            "run_after": [],
+            "test": {},
         }
 
         if include_secret is False and hook_type == "webhook":
@@ -423,6 +497,9 @@ class TestChange:
                     "active": True,
                     "config": config,
                     "sideload": ["queues"],
+                    "token_owner": TOKEN_OWNER_URL,
+                    "run_after": RUN_AFTER_URLS,
+                    "test": TEST_PAYLOAD_TO_HOOK_TO_API,
                 },
             ),
             request_headers={"Authorization": f"Token {TOKEN}"},
@@ -443,6 +520,12 @@ class TestChange:
                 hook_type,
                 "-s",
                 "queues",
+                "--token-owner",
+                TOKEN_OWNER_ID,
+                "--run-after",
+                RUN_AFTER_HOOK_ID,
+                "--test",
+                TEST_PAYLOAD_TO_HOOK_FROM_CLI,
             ]
             + get_options(hook_type, config, tmp_path),
         )

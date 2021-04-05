@@ -109,6 +109,30 @@ events = click.option(
     help="List of events, when the hook should be notified.",
 )
 
+token_owner = click.option(
+    "--token-owner",
+    required=False,
+    type=int,
+    multiple=False,
+    help="ID of the user for whom a temporary API token should be generated and passed to the webhook.",
+)
+
+run_after = click.option(
+    "--run-after",
+    required=False,
+    type=int,
+    multiple=True,
+    help="IDs of the hooks that this hook should run after.",
+)
+
+test = click.option(
+    "--test",
+    required=False,
+    type=str,
+    multiple=False,
+    help='Input saved for hook testing purposes. Pass as JSON, e.g. "{\\"config\\": \\"value\\"}"',
+)
+
 
 class OptionRequiredIf(click.Option):
     def full_process_value(self, ctx, value):

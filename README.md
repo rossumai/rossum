@@ -201,6 +201,9 @@ MIT
     ``` 
    
 ## Changelog
+### 2021-04-06 v3.8.0
+* Allow passing token_owner, test and run_after attributes when creating and changing hook objects
+
 ### 2021-04-01 v3.7.0
 * Applied configurable retry mechanism to all requests done via rossum library
 * Enable assigning annotator_limited role to user

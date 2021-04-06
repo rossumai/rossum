@@ -1,3 +1,5 @@
+import json
+from json import JSONDecodeError
 from typing import Tuple, Optional, Dict, Any, List
 
 import click
@@ -40,6 +42,9 @@ def cli() -> None:
 @option.config_code
 @option.config_runtime
 @option.sideload
+@option.token_owner
+@option.run_after
+@option.test
 @click.pass_context
 def create_command(
     ctx: click.Context,
@@ -49,6 +54,9 @@ def create_command(
     active: bool,
     events: Tuple[str, ...],
     sideload: Tuple[str, ...],
+    token_owner: Optional[int],
+    run_after: List[str] = None,
+    test: Optional[str] = None,
     **kwargs,
 ) -> None:
 
@@ -65,6 +73,17 @@ def create_command(
         config = {**kwargs}
         config = cleanup_config(config)
 
+        token_owner_url = f"{rossum.url}/users/{token_owner}" if token_owner else None
+        all_run_after_hooks = (
+            [f"{rossum.url}/hooks/{hook_id}" for hook_id in run_after] if run_after else []
+        )
+
+        try:
+            loaded_test = json.loads(test) if test else {}
+        except JSONDecodeError:
+            click.echo("Could not parse value for --test. Did you pass a valid JSON?")
+            return
+
         response = rossum.create_hook(
             name=name,
             hook_type=hook_type,
@@ -73,6 +92,9 @@ def create_command(
             events=list(events),
             sideload=list(sideload),
             config=config,
+            token_owner=token_owner_url,
+            run_after=all_run_after_hooks,
+            test=loaded_test,
         )
 
         additional_fields = [
@@ -138,6 +160,9 @@ def list_command(ctx: click.Context,):
 @option.config_code
 @option.config_runtime
 @option.sideload
+@option.token_owner
+@option.run_after
+@option.test
 @click.pass_context
 def change_command(
     ctx: click.Context,
@@ -148,6 +173,9 @@ def change_command(
     events: Tuple[str, ...],
     active: Optional[bool],
     sideload: Tuple[str, ...],
+    token_owner: Optional[int],
+    run_after: List[str] = None,
+    test: Optional[str] = None,
     **kwargs,
 ) -> None:
 
@@ -174,6 +202,17 @@ def change_command(
             data["config"] = config
         if sideload:
             data["sideload"] = list(sideload)
+        if token_owner:
+            data["token_owner"] = f"{rossum.url}/users/{token_owner}"
+        if run_after:
+            data["run_after"] = [f"{rossum.url}/hooks/{hook_id}" for hook_id in run_after]
+        if test:
+            try:
+                loaded_test = json.loads(test)
+                data["test"] = loaded_test
+            except JSONDecodeError:
+                click.echo("Could not parse value for --test. Did you pass a valid JSON?")
+                return
 
         rossum.patch(f"hooks/{id_}", data)
 

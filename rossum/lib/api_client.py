@@ -537,6 +537,10 @@ class RossumClient(APIClient):
         events: List[str],
         sideload: List[str],
         config: Dict,
+        run_after: List[str] = None,
+        metadata: Optional[Dict] = None,
+        token_owner: Optional[str] = "",
+        test: Optional[Dict] = None,
     ) -> dict:
 
         data = {
@@ -547,7 +551,12 @@ class RossumClient(APIClient):
             "events": events,
             "sideload": sideload,
             "config": config,
+            "metadata": metadata or {},
+            "run_after": run_after or [],
+            "test": test or {},
         }
+        if token_owner:
+            data["token_owner"] = token_owner
         return get_json(self.post("hooks", data))
 
     def upload_document(

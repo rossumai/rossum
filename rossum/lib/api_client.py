@@ -317,11 +317,14 @@ class RossumClient(APIClient):
         self,
         sideloads: Optional[Iterable[APIObject]] = None,
         *,
+        any_of_ids: Optional[Iterable[int]] = None,
         workspace: Optional[int] = None,
         users: Optional[Iterable[int]] = None,
         hooks: Optional[Iterable[int]] = None,
     ) -> List[dict]:
         query: Dict[str, Any] = {}
+        if any_of_ids:
+            query["id"] = ",".join(str(qid) for qid in any_of_ids)
         if workspace:
             query[WORKSPACES.singular] = workspace
         if users:

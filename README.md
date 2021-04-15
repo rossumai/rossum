@@ -189,18 +189,25 @@ MIT
 * Use [`pre-commit`](https://pre-commit.com/#install) to avoid linting issues.
 * Submit a pull request from forked version of this repo.
 * Select any of the maintainers as a reviewer.
-* After an approved review, when releasing, a `Collaborator` with `Admin` role shall run in `master` branch:
+* After an approved review, when releasing, a `Collaborator` with `Admin` role shall do the following in `master` branch:
+  * Update the Changelog in README, describing all the changes included in the newest release
+  * run:
     ```bash
     bump2version minor
     git push
     git push --tags
     ``` 
-* To build a Windows installer, run:
+* In the end, to build a Windows installer, run:
     ```bash
     pynsist installer.cfg
     ``` 
+* Go to [releases](#https://github.com/rossumai/rossum/releases) and upload the newest .exe file from the
+  `.build` folder of your `rossum` repository to the newest release 
    
 ## Changelog
+### 2021-04-15 v3.9.0
+* Allow filtering specific queue IDs when listing all user's queues
+
 ### 2021-04-06 v3.8.0
 * Allow passing token_owner, test and run_after attributes when creating and changing hook objects
 

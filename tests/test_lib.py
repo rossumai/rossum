@@ -274,3 +274,4 @@ class TestRetryMechanism:
         )
         assert user_json == self.api_client.get_user()
         assert get_user_called.call_count == 2
+        assert None is None

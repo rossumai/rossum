@@ -31,7 +31,7 @@ setup(
     packages=find_packages(exclude=("tests*",)),
     install_requires=[
         "pandas",
-        "click",
+        "click<=7.1.2",
         "click-shell",
         'xlrd > 1.2.0;python_version>"3.6"',
         'xlrd==1.2.0;python_version=="3.6"',

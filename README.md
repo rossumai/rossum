@@ -205,6 +205,9 @@ MIT
   `.build` folder of your `rossum` repository to the newest release 
    
 ## Changelog
+### 2021-04-18 v3.9.1
+* Include tenacity library in the Windows build
+
 ### 2021-04-15 v3.9.0
 * Allow filtering specific queue IDs when listing all user's queues
 

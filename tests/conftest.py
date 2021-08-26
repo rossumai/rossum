@@ -97,6 +97,7 @@ def mock_file(tmp_path):
 
 
 def match_uploaded_json(uploaded_json: dict, request: Request) -> bool:
+    assert request.json() == uploaded_json
     return request.json() == uploaded_json
 
 

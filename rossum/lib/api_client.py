@@ -456,25 +456,27 @@ class RossumClient(APIClient):
         return get_json(self.post("queues", data))
 
     def create_inbox(
-        self, name: str, email_prefix: Optional[str], bounce_email: Optional[str], queue_url: str
+        self,
+        name: str,
+        email_prefix: Optional[str],
+        bounce_email: Optional[str],
+        queue_url: str,
+        email: Optional[str] = None,
     ) -> dict:
-        if not (email_prefix and bounce_email):
+        if not (email_prefix or email):
             raise RossumException(
-                "Inbox cannot be created without both bounce email and email prefix specified."
+                "Inbox cannot be created without email prefix or email specified."
             )
-
-        return get_json(
-            self.post(
-                "inboxes",
-                data={
-                    "name": name,
-                    "email_prefix": email_prefix,
-                    "bounce_email_to": bounce_email,
-                    "bounce_unprocessable_attachments": True,
-                    "queues": [queue_url],
-                },
-            )
-        )
+        inbox_creation_data = {
+            "name": name,
+            "email_prefix": email_prefix,
+            "bounce_email_to": bounce_email,
+            "bounce_unprocessable_attachments": True if bounce_email else False,
+            "queues": [queue_url],
+        }
+        if email:
+            inbox_creation_data["email"] = email
+        return get_json(self.post("inboxes", data=inbox_creation_data))
 
     def create_user(
         self,

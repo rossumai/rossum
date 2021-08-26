@@ -565,12 +565,29 @@ class RossumClient(APIClient):
         return get_json(self.post("hooks", data))
 
     def upload_document(
-        self, id_: int, file: str, filename_overwrite: str = "", values: Dict[str, str] = None
+        self,
+        id_: int,
+        file: Optional[str] = "",
+        filename_overwrite: str = "",
+        values: Dict[str, str] = None,
+        metadata: Optional[Dict] = None,
+        file_bytes: Optional[bytes] = None,
     ) -> dict:
-        filename = PurePath(filename_overwrite).name or PurePath(file).name
-        files: RequestsFiles = {"content": (filename, open(f"{file}", "rb"))}
+        if not (file or file_bytes):
+            raise RossumException("No file(s) to be sent.")
+        if file_bytes and not filename_overwrite:
+            raise RossumException(
+                "Need to pass filename_overwrite parameter to state the file name for the uploaded document."
+            )
+        if file:
+            filename = PurePath(filename_overwrite).name or PurePath(file).name
+            files: RequestsFiles = {"content": (filename, open(f"{file}", "rb"))}
+        else:
+            files: RequestsFiles = {"content": (filename_overwrite, file_bytes)}  # type: ignore
         if values is not None:
             files["values"] = (None, json.dumps(values))
+        if metadata:
+            files["metadata"] = (None, json.dumps(metadata))
         return get_json(self.post(f"queues/{id_}/upload", files=files))
 
     def set_metadata(self, object_type: APIObject, object_id: int, metadata: Dict[str, Any]):

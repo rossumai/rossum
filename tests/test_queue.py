@@ -147,15 +147,6 @@ class TestCreate(QueueFixtures):
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert f"{self.queue_id}, {email}\n" == result.output
 
-    @pytest.mark.usefixtures("create_queue_schema")
-    def test_cannot_create_inbox(self, isolated_cli_runner):
-        result = isolated_cli_runner.invoke(
-            create_command,
-            ["--schema-content-file", SCHEMA_FILE_NAME, "--email-prefix", "1234567", self.name],
-        )
-        assert result.exit_code == 1, print_tb(result.exc_info[2])
-        assert "Error: Inbox cannot be created without specified bounce email.\n" == result.output
-
     @pytest.mark.usefixtures("create_queue_urls", "create_queue_schema")
     def test_create_queue_with_hooks(self, requests_mock, isolated_cli_runner):
         first_hook_id = 101
@@ -422,17 +413,6 @@ class TestChange(QueueFixtures):
         )
         assert not result.exit_code, print_tb(result.exc_info[2])
         assert result.output == f"{self.inbox_id}, {self.inbox_email}, {bounce_mail}\n"
-
-    @pytest.mark.usefixtures("create_queue_urls")
-    def test_cannot_create_inbox_on_queue_change(self, isolated_cli_runner):
-        result = isolated_cli_runner.invoke(
-            change_command, [self.queue_id, "--email-prefix", self.email_prefix]
-        )
-        assert result.exit_code == 1, print_tb(result.exc_info[2])
-        assert (
-            "Error: Inbox cannot be created without both bounce email and email prefix specified.\n"
-            == result.output
-        )
 
     def test_change_hook_ids(self, requests_mock, cli_runner):
         requests_mock.get(

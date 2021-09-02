@@ -39,9 +39,6 @@ def create_command(
     hook_id: Optional[Tuple[int, ...]],
     locale: Optional[str],
 ) -> None:
-    if email_prefix is not None and bounce_email is None:
-        raise click.ClickException("Inbox cannot be created without specified bounce email.")
-
     with RossumClient(context=ctx.obj) as rossum:
         workspace_url = rossum.get_workspace(workspace_id)["url"]
         connector_url = (
@@ -131,7 +128,7 @@ def change_command(
     locale: Optional[str],
 ) -> None:
 
-    if not any([name, schema_content, email_prefix, bounce_email, connector_id, locale, hook_id]):
+    if not any([name, schema_content, email_prefix, connector_id, locale, hook_id]):
         return
 
     data: Dict[str, Any] = {}

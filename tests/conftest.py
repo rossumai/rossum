@@ -92,7 +92,7 @@ def mock_organization_urls(request: FixtureRequest, requests_mock):
 @pytest.fixture
 def mock_file(tmp_path):
     invoice_sample = tmp_path / "empty_file.pdf"
-    invoice_sample.write_bytes(_EMPTY_PDF_FILE)
+    invoice_sample.write_bytes(EMPTY_PDF_FILE)
     yield invoice_sample
 
 
@@ -129,7 +129,7 @@ Content-Type: {request.headers['Content-Type']}
     }
 
 
-_EMPTY_PDF_FILE = b"""%PDF-1.3
+EMPTY_PDF_FILE = b"""%PDF-1.3
 1 0 obj
 <<
 /Type /Pages

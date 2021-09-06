@@ -205,6 +205,10 @@ MIT
   `.build` folder of your `rossum` repository to the newest release 
    
 ## Changelog
+### 2021-09-06 v3.10.0
+* Allow creation of inbox without passing bounce email
+* Allow uploading documents by passing file as bytes to the API client
+
 ### 2021-04-18 v3.9.1
 * Include tenacity library in the Windows build
 

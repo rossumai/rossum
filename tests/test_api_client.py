@@ -134,3 +134,10 @@ class TestRossumClient:
                 values={"upload:organization_unit": "Sales"},
                 metadata={"SAP_ID": 123456},
             )
+
+    def test_get_paginated_with_ambiguous_sideloading(self):
+        with pytest.raises(RossumException) as ex:
+            self.rossum_client.get_paginated(
+                QUEUES_URL, query={"sideload": "workspaces"}, sideloads=["workspaces"]
+            )
+        assert "sideloading cannot be specified both in query and sideloads" == str(ex.value)

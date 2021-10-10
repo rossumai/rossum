@@ -439,6 +439,21 @@ class RossumClient(APIClient):
             raise RossumException("Annotation ID wasn't specified.")
         return get_json(self.get(f"{ANNOTATIONS}/{id_}"))
 
+    def get_annotations(
+        self,
+        *,
+        queue: Optional[int] = None,
+        status: Optional[Iterable[str]] = None,
+        sideloads: Optional[Iterable[Union[Sideload, str]]] = None,
+    ):
+        query = {}
+        if queue is not None:
+            query["queue"] = str(queue)
+        if status:
+            query["status"] = ",".join(status)
+        annotations, _ = self.get_paginated(ANNOTATIONS, query=query, sideloads=sideloads)
+        return annotations
+
     def poll_annotation(
         self, annotation: int, check_success: Callable, max_retries=120, sleep_secs=5
     ) -> dict:

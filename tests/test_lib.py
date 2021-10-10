@@ -257,6 +257,89 @@ class TestRossumClient:
         )
         assert api_response == self.api_client.create_workspace(name, ORGANIZATION_URL, metadata)
 
+    @pytest.mark.parametrize(
+        "queue_id, status, sideloads",
+        [
+            (None, None, None),
+            (QUEUE_ID, None, None),
+            (QUEUE_ID, "exported", None),
+            (QUEUE_ID, "exported", ["documents"]),
+        ],
+    )
+    @pytest.mark.usefixtures("mock_login_request")
+    def test_get_annotations(self, requests_mock, queue_id, status, sideloads):
+        assert not sideloads or sideloads == [
+            "documents"
+        ], "test requires extention to more sideload types"
+
+        def get_document(document_id: int, sideloaded: bool):
+            document_obj = {"id": document_id, "url": f"{DOCUMENTS_URL}/{document_id}"}
+            return document_obj if sideloaded else document_obj["url"]
+
+        num_documents = 3
+        annotations = [
+            {
+                "id": document_id,
+                "url": f"{ANNOTATIONS_URL}/{document_id}",
+                "queue": f"{QUEUES_URL}/{queue_id}",
+                "document": f"{DOCUMENTS_URL}/{document_id}",
+                "status": status,
+            }
+            for document_id in range(num_documents)
+        ]
+        documents = [get_document(document_id, True) for document_id in range(num_documents)]
+
+        annotations_base_url = build_annotations_base_url(queue_id, status, sideloads)
+        api_response_pages = {
+            annotations_base_url: {
+                "pagination": {
+                    "total": num_documents,
+                    "total_pages": 2,
+                    "previous": None,
+                    "next": f"{annotations_base_url}&page=2",
+                },
+                "results": annotations[:1],
+                "documents": documents[:1],
+            },
+            f"{annotations_base_url}&page=2": {
+                "pagination": {
+                    "total": num_documents,
+                    "total_pages": 2,
+                    "previous": f"{annotations_base_url}",
+                    "next": None,
+                },
+                "results": annotations[1:],
+                "documents": documents[1:],
+            },
+        }
+
+        for response_content in api_response_pages.values():
+            if "documents" not in (sideloads or []):
+                del response_content["documents"]
+
+        expected = [
+            {
+                "id": document_id,
+                "url": f"{ANNOTATIONS_URL}/{document_id}",
+                "queue": f"{QUEUES_URL}/{queue_id}",
+                "document": get_document(document_id, "documents" in (sideloads or [])),
+                "status": status,
+            }
+            for document_id in range(num_documents)
+        ]
+
+        for mock_url, mock_data in api_response_pages.items():
+            requests_mock.get(
+                mock_url,
+                request_headers={"Authorization": f"Token {TOKEN}"},
+                json=mock_data,
+                status_code=200,
+            )
+
+        assert expected == self.api_client.get_annotations(
+            queue=queue_id, status=([status] if status else None), sideloads=sideloads
+        )
+
 
 @pytest.mark.usefixtures("rossum_credentials")
 class TestRetryMechanism:
@@ -274,3 +357,17 @@ class TestRetryMechanism:
         )
         assert user_json == self.api_client.get_user()
         assert get_user_called.call_count == 2
+
+
+def build_annotations_base_url(queue_id, status, sideloads):
+    query = {}
+    if queue_id is not None:
+        query["queue"] = queue_id
+    if status is not None:
+        query["status"] = status
+    if sideloads is None:
+        sideloads = []
+    if sideloads:
+        query["sideload"] = ",".join(str(s) for s in sideloads)
+    query = "&".join(f"{k}={v}" for k, v in query.items())
+    return ANNOTATIONS_URL + (f"?{query}" if query else "")

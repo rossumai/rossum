@@ -546,6 +546,7 @@ class RossumClient(APIClient):
         metadata: Optional[Dict] = None,
         token_owner: Optional[str] = "",
         test: Optional[Dict] = None,
+        extension_source: Optional[str] = None,
     ) -> dict:
 
         data = {
@@ -562,6 +563,8 @@ class RossumClient(APIClient):
         }
         if token_owner:
             data["token_owner"] = token_owner
+        if extension_source:
+            data["extension_source"] = extension_source
         return get_json(self.post("hooks", data))
 
     def upload_document(

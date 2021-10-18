@@ -3,7 +3,7 @@ from functools import partial
 import pytest
 
 from rossum.lib.api_client import RossumClient, RossumException
-from tests.conftest import INBOXES_URL, match_uploaded_json, QUEUES_URL, EMPTY_PDF_FILE
+from tests.conftest import INBOXES_URL, match_uploaded_json, QUEUES_URL, EMPTY_PDF_FILE, HOOKS_URL
 
 QUEUE_ID = 600500
 
@@ -11,6 +11,38 @@ QUEUE_ID = 600500
 @pytest.mark.usefixtures("rossum_credentials")
 class TestRossumClient:
     rossum_client = RossumClient(None)
+
+    @pytest.mark.usefixtures("mock_login_request")
+    def test_create_hook_extension_source(self, requests_mock):
+        kwargs = dict(
+            name="name1",
+            hook_type="hook_type1",
+            queues=[24412],
+            active=True,
+            events=["annotation_content.initialize", "annotation_content.user_update"],
+            sideload=[],
+            config={
+                "url": "httpmock:/adfa.asdf",
+                "secret": "sdf",
+                "insecure_ssl": False,
+            },
+            token_owner="httpmock://tokenowner.url",
+            extension_source="rossum_store",
+        )
+
+        def matcher(request):
+            request_dict = request.json()
+            for key in kwargs:
+                if key == "hook_type":
+                    assert request_dict["type"] == kwargs[key]
+                else:
+                    assert request_dict[key] == kwargs[key]
+            return {"id": 100200}
+
+        requests_mock.post(
+            HOOKS_URL, json={"id": 100200}, status_code=201, additional_matcher=matcher
+        )
+        self.rossum_client.create_hook(**kwargs)
 
     @pytest.mark.usefixtures("mock_login_request")
     def test_create_inbox_with_email_prefix(self, requests_mock):

@@ -35,7 +35,13 @@ from . import (
 
 
 class RossumException(click.ClickException):
-    pass
+    def __init__(self, message: str, response: Response = None):
+        super().__init__(message)
+        self.response = response
+
+    @property
+    def status_code(self):
+        return self.response.status_code if self.response else 400
 
 
 RequestsFiles = Dict[str, Tuple[Optional[str], Union[IO[bytes], BinaryIO, str]]]
@@ -144,9 +150,11 @@ class APIClient(AbstractContextManager):
         retry_request = retry(**self._retry_logic_rules)(self._login_to_api)
         response = retry_request(login_data)
         if response.status_code == 401:
-            raise RossumException(f"Login failed with the provided credentials.")
+            raise RossumException("Login failed with the provided credentials.", response=response)
         elif not response.ok:
-            raise RossumException(f"Invalid response [{response.url}]: {response.text}")
+            raise RossumException(
+                f"Invalid response [{response.url}]: {response.text}", response=response
+            )
 
         return response.json()["key"]
 
@@ -197,7 +205,9 @@ class APIClient(AbstractContextManager):
         retry_request = retry(**self._retry_logic_rules)(self._do_request)
         response = retry_request(method, url, query, **kwargs)
         if response.status_code != expected_status_code:
-            raise RossumException(f"Invalid response [{response.url}]: {response.text}")
+            raise RossumException(
+                f"Invalid response [{response.url}]: {response.text}", response=response
+            )
         return response
 
     def delete(self, to_delete: Dict[str, str], verbose: int = 0, item: str = "annotation") -> None:
@@ -610,14 +620,18 @@ def get_json(response: Response) -> dict:
     try:
         return response.json()
     except ValueError as e:
-        raise RossumException(f"Invalid JSON [{response.url}]: {response.text}") from e
+        raise RossumException(
+            f"Invalid JSON [{response.url}]: {response.text}", response=response
+        ) from e
 
 
 def get_text(response: Response) -> str:
     try:
         return response.text
     except ValueError as e:
-        raise RossumException(f"Invalid text [{response.url}]: {response.text}") from e
+        raise RossumException(
+            f"Invalid text [{response.url}]: {response.text}", response=response
+        ) from e
 
 
 def _encode_booleans(query: Optional[dict]) -> Optional[dict]:

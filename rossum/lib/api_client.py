@@ -150,7 +150,7 @@ class APIClient(AbstractContextManager):
         retry_request = retry(**self._retry_logic_rules)(self._login_to_api)
         response = retry_request(login_data)
         if response.status_code == 401:
-            raise RossumException(f"Login failed with the provided credentials.", response=response)
+            raise RossumException("Login failed with the provided credentials.", response=response)
         elif not response.ok:
             raise RossumException(
                 f"Invalid response [{response.url}]: {response.text}", response=response

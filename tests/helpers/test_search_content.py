@@ -123,10 +123,10 @@ class TestSearchFieldsInContent:
         assert multivalue_parent == MULTIVALUE_PARENT_FIELD
 
     def test_find_children_of_simple_multivalue(self):
-        multivalue_parent = find_children_of_simple_multivalue(
+        multivalue_children = find_children_of_simple_multivalue(
             DEFAULT_SCHEMA, MULTIVALUE_CHILD_NAME
         )
-        assert multivalue_parent == SIMPLE_MULTIVALUE_CHILDREN
+        assert multivalue_children == SIMPLE_MULTIVALUE_CHILDREN
 
     def test_find_line_items_datapoints(self):
         line_items_found = find_all_line_items_datapoints(DEFAULT_SCHEMA)

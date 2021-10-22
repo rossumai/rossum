@@ -21,7 +21,7 @@ def find_line_items_column(content: list, schema_id: str) -> list:
     )
 
 
-def find_line_items_rows(content: list, schema_id: str) -> list:
+def find_line_items_rows(content: list, schema_id: str) -> Optional[list]:
     return jmespath.search(
         f"[].children[?schema_id=='{schema_id}'][] | [0] | children[]", content
     )

@@ -205,10 +205,11 @@ MIT
   `.build` folder of your `rossum` repository to the newest release 
    
 ## Changelog
-### 2021-10-24 v3.11.0
+### 2021-10-24 v3.12.0
 * Allow sending new attributes to API when creating hooks
 * Response is being propagated to the RossumException
 * Added functions to iterate over hook payload easily
+* Fix for library versioning due to incorrectly published tags
 
 ### 2021-09-06 v3.10.0
 * Allow creation of inbox without passing bounce email

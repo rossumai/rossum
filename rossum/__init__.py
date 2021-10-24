@@ -1,4 +1,4 @@
-__version__ = "3.12.0"
+__version__ = "3.11.0"
 
 CTX_PROFILE = "PROFILE"
 CTX_DEFAULT_PROFILE = "default"

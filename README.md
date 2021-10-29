@@ -205,6 +205,9 @@ MIT
   `.build` folder of your `rossum` repository to the newest release 
    
 ## Changelog
+### 2021-10-29 v3.12.1
+* Propagate changelogs to the releases
+
 ### 2021-10-24 v3.12.0
 * Allow sending new attributes to API when creating hooks
 * Response is being propagated to the RossumException

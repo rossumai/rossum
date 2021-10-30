@@ -21,11 +21,7 @@ class TestRossumClient:
             active=True,
             events=["annotation_content.initialize", "annotation_content.user_update"],
             sideload=[],
-            config={
-                "url": "httpmock:/adfa.asdf",
-                "secret": "sdf",
-                "insecure_ssl": False,
-            },
+            config={"url": "httpmock:/adfa.asdf", "secret": "sdf", "insecure_ssl": False},
             token_owner="httpmock://tokenowner.url",
             extension_source="rossum_store",
         )

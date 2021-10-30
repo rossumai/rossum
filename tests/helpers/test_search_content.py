@@ -3,7 +3,8 @@ from rossum.helpers.search_content import (
     find_all_line_items_datapoints,
     find_single_datapoint,
     find_multivalue_parent,
-    find_children_of_simple_multivalue, find_line_items_rows,
+    find_children_of_simple_multivalue,
+    find_line_items_rows,
 )
 
 ACCOUNT_NUMBER_NAME = "account_num"

@@ -101,6 +101,10 @@ class TestDelete:
             request_headers={"Authorization": f"Token {TOKEN}"},
             json={
                 "pagination": {"next": None, "total": 1},
+                "results": [
+                    {"id": i, "url": fr"{ANNOTATIONS_URL}/{i}", "document": fr"{DOCUMENTS_URL}/{i}"}
+                    for i in range(n_documents)
+                ],
                 "documents": [
                     {"id": i, "url": fr"{DOCUMENTS_URL}/{i}"} for i in range(n_documents)
                 ],

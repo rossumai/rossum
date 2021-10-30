@@ -18,6 +18,7 @@ from tenacity import (
     retry_if_exception_type,
 )
 
+from .sideloading import to_sideloads, Sideload
 from rossum import __version__, CTX_PROFILE, CTX_DEFAULT_PROFILE
 from rossum.configure import get_credential
 from . import (
@@ -229,30 +230,63 @@ class APIClient(AbstractContextManager):
         query: Optional[Dict[str, Any]] = None,
         *,
         key: str = "results",
+        sideloads: Optional[Iterable[Union[Sideload, str]]] = None,
     ) -> Tuple[List[Dict[str, Any]], int]:
+        if query is None:
+            query = {}
+
+        sideloads = to_sideloads(sideloads)
+
+        if sideloads:
+            if "sideload" in query:
+                raise RossumException("sideloading cannot be specified both in query and sideloads")
+            query = query.copy()
+            for sideload in sideloads:
+                sideload.setup_query(query)
+
         response = self.get(path, query)
         response_dict = response.json()
 
-        res = response_dict[key]
+        res = response_dict
         next_page = response_dict["pagination"]["next"]
 
         while next_page:
             response = self.get_url(next_page)
             response_dict = response.json()
 
-            res.extend(response_dict[key])
+            for k, v in response_dict.items():
+                if k != "pagination":
+                    res.setdefault(k, []).extend(v)
             next_page = response_dict["pagination"]["next"]
 
-        return res, response_dict["pagination"]["total"]
+        if sideloads:
+            self._resolve_sideloads(res, sideloads)
+
+        return res[key], response_dict["pagination"]["total"]
 
     def _sideload(
         self, objects: List[dict], sideloads: Optional[Iterable[APIObject]] = None
     ) -> List[dict]:
+        response = {"results": objects}
         for sideload in sideloads or []:
             sideloaded, _ = self.get_paginated(sideload)
-            sideloaded_dicts = {
-                sideloaded_dict["url"]: sideloaded_dict for sideloaded_dict in sideloaded
-            }
+            response[sideload.plural] = sideloaded
+        if sideloads:
+            self._resolve_sideloads(response, to_sideloads(sideloads))
+        return response["results"]
+
+    def _resolve_sideloads(self, response: dict, sideloads: Iterable[Sideload]) -> None:
+        """
+        Resolve the dependency injections of sideloaded objects to corresponding
+        results objects in the `response`.
+
+        :param response Response object as returned from Rossum app for any
+        paginated GET-like request.
+        :param sideloads Optional list of object types to resolve dependency
+        injection for.
+        """
+        for sideload in sideloads or []:
+            sideloaded_dicts = sideload.get_mapping(response.get(sideload.plural, []))
 
             def inject_sideloaded(obj: dict) -> dict:
                 try:
@@ -267,8 +301,8 @@ class APIClient(AbstractContextManager):
                     obj[sideload.singular] = sideloaded_dicts.get(url, {})
                 return obj
 
-            objects = [inject_sideloaded(o) for o in objects]
-        return objects
+            for obj in response["results"]:
+                inject_sideloaded(obj)
 
     @property
     def _authentication(self) -> dict:
@@ -404,6 +438,21 @@ class RossumClient(APIClient):
         if id_ is None:
             raise RossumException("Annotation ID wasn't specified.")
         return get_json(self.get(f"{ANNOTATIONS}/{id_}"))
+
+    def get_annotations(
+        self,
+        *,
+        queue: Optional[int] = None,
+        status: Optional[Iterable[str]] = None,
+        sideloads: Optional[Iterable[Union[Sideload, str]]] = None,
+    ):
+        query = {}
+        if queue is not None:
+            query["queue"] = str(queue)
+        if status:
+            query["status"] = ",".join(status)
+        annotations, _ = self.get_paginated(ANNOTATIONS, query=query, sideloads=sideloads)
+        return annotations
 
     def poll_annotation(
         self, annotation: int, check_success: Callable, max_retries=120, sleep_secs=5

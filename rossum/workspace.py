@@ -56,8 +56,9 @@ def delete_command(ctx: click.Context, id_: int) -> None:
         for queue in queues:
             res, _ = rossum.get_paginated(
                 "annotations",
-                {"page_size": 50, "queue": queue["id"], "sideload": "documents"},
+                {"page_size": 50, "queue": queue["id"]},
                 key="documents",
+                sideloads=["documents"],
             )
             documents.update({d["id"]: d["url"] for d in res})
 

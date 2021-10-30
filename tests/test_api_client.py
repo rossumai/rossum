@@ -21,11 +21,7 @@ class TestRossumClient:
             active=True,
             events=["annotation_content.initialize", "annotation_content.user_update"],
             sideload=[],
-            config={
-                "url": "httpmock:/adfa.asdf",
-                "secret": "sdf",
-                "insecure_ssl": False,
-            },
+            config={"url": "httpmock:/adfa.asdf", "secret": "sdf", "insecure_ssl": False},
             token_owner="httpmock://tokenowner.url",
             extension_source="rossum_store",
         )
@@ -134,3 +130,10 @@ class TestRossumClient:
                 values={"upload:organization_unit": "Sales"},
                 metadata={"SAP_ID": 123456},
             )
+
+    def test_get_paginated_with_ambiguous_sideloading(self):
+        with pytest.raises(RossumException) as ex:
+            self.rossum_client.get_paginated(
+                QUEUES_URL, query={"sideload": "workspaces"}, sideloads=["workspaces"]
+            )
+        assert "sideloading cannot be specified both in query and sideloads" == str(ex.value)

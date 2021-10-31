@@ -56,8 +56,8 @@ jobs:
       deploy:
         provider: pypi
         edge: true
-        user: rossum
-        password: ${PYPI_DEPLOY_PASSWORD}
+        username: "__token__"
+        password: ${PYPI_DEPLOY_TOKEN}
         on:
           tags: true
 

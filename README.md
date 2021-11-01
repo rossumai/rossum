@@ -205,7 +205,7 @@ MIT
   `.build` folder of your `rossum` repository to the newest release 
    
 ## Changelog
-### 2021-11-1 v3.13.1
+### 2021-11-1 v3.13.1 and v3.13.2
 * Update setup of the release process for pypi
 
 ### 2021-10-29 v3.13.0

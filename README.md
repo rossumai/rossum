@@ -205,6 +205,9 @@ MIT
   `.build` folder of your `rossum` repository to the newest release 
    
 ## Changelog
+### 2021-11-1 v3.13.1
+* Update setup of the release process for pypi
+
 ### 2021-10-29 v3.13.0
 * Add method for getting annotations
 * Refactor sideloading functionality to enable sideloading of new objects

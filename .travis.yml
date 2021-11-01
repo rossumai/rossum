@@ -54,14 +54,12 @@ jobs:
       script: skip
       python: 3.7
       deploy:
+        edge: true
         provider: pypi
         username: "__token__"
         password: ${PYPI_DEPLOY_TOKEN}
         on:
           tags: true
-        edge:
-          source: 'native-api/dpl'
-          branch: 'pip_fix_upgrade_deps'
 
 
 install:

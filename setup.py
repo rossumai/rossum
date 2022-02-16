@@ -47,7 +47,13 @@ setup(
     ],
     python_requires=">=3.6",
     setup_requires=["pytest-runner"],
-    tests_require=["pytest", "pytest-cov", "requests_mock", "pytest-click"],
+    tests_require=[
+        "pytest",
+        "pytest-cov",
+        "requests_mock",
+        "pytest-click",
+        'tomli<2.0;python_version<"3.7"',
+    ],
     zip_safe=False,
     entry_points={"console_scripts": ["rossum = rossum.main:entry_point"]},
 )

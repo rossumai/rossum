@@ -62,11 +62,11 @@ jobs:
           tags: true
 
 
+# Hotfix: setuptools is capped at version 59, as newer versions seem to have issues with importlib_metadata in python 3.7.
+# See e.g. https://app.travis-ci.com/github/rossumai/rossum/jobs/560023987
 install:
-  - pip install tox-travis setuptools --upgrade
+  - pip install tox-travis "setuptools<60" --upgrade
 
 # command to run tests
 script:
   - tox -c ${TOXCFG}
-
-

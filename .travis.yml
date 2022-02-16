@@ -63,10 +63,8 @@ jobs:
 
 
 install:
-  - pip install tox-travis setuptools --upgrade
+  - pip install tox-travis "setuptools<60" --upgrade
 
 # command to run tests
 script:
   - tox -c ${TOXCFG}
-
-

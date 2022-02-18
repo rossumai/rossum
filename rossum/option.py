@@ -135,8 +135,17 @@ test = click.option(
 
 
 class OptionRequiredIf(click.Option):
-    def full_process_value(self, ctx, value):
+    def full_process_value(self, ctx, value):  # pragma: no cover
+        # full_process_value is called in Click < 8.0
         value = super(OptionRequiredIf, self).full_process_value(ctx, value)
+        return self._process_value(ctx, value)
+
+    def process_value(self, ctx, value):
+        # process_value is called in Click >= 8.0
+        value = super(OptionRequiredIf, self).process_value(ctx, value)
+        return self._process_value(ctx, value)
+
+    def _process_value(self, ctx, value):
         option = self.human_readable_name
 
         required_params = {

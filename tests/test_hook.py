@@ -6,6 +6,7 @@ from pathlib import Path
 from traceback import print_tb, format_tb
 from typing import List
 
+import click
 import pytest
 
 from rossum.hook import list_command, change_command, delete_command, create_command
@@ -32,6 +33,7 @@ TOKEN_OWNER_ID = 12345
 TOKEN_OWNER_URL = f"{USERS_URL}/{TOKEN_OWNER_ID}"
 RUN_AFTER_HOOK_ID = 999
 RUN_AFTER_URLS = [f"{HOOKS_URL}/{RUN_AFTER_HOOK_ID}"]
+EXTRA_SPACE_IN_CLICK7 = " " if int(click.__version__.split(".")[0]) < 8 else ""
 
 
 def get_params(hook_type, value):
@@ -44,7 +46,7 @@ def get_params(hook_type, value):
             },
             "expected_result": (f", {CONFIG_URL}, {CONFIG_SECRET}"),
             "illegal_usage_result": "--config_runtime cannot be used for the hook type webhook",
-            "missing_option_result": "'--config-insecure-ssl'.  Required if hook type is webhook",
+            "missing_option_result": f"'--config-insecure-ssl'. {EXTRA_SPACE_IN_CLICK7}Required if hook type is webhook",
             "expected_table_without_secret": f"""\
   id  name           events                              queues  active    sideload    url                             insecure_ssl
 ----  -------------  --------------------------------  --------  --------  ----------  ------------------------------  --------------
@@ -60,7 +62,7 @@ def get_params(hook_type, value):
             "config": {"code": Path(CONFIG_CODE).read_text(), "runtime": CONFIG_RUNTIME},
             "expected_result": "",
             "illegal_usage_result": "--config_url cannot be used for the hook type function",
-            "missing_option_result": "'--config-runtime'.  Required if hook type is function",
+            "missing_option_result": f"'--config-runtime'. {EXTRA_SPACE_IN_CLICK7}Required if hook type is function",
             "expected_table": f"""\
   id  name           events                              queues  active    sideload
 ----  -------------  --------------------------------  --------  --------  ----------

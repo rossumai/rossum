@@ -205,6 +205,9 @@ MIT
   `.build` folder of your `rossum` repository to the newest release 
    
 ## Changelog
+### 2022-02-18 v3.14.0
+* Ensure compatibility with click<8.1.0
+
 ### 2021-11-1 v3.13.1 and v3.13.2
 * Update setup of the release process for pypi
 

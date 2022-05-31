@@ -41,7 +41,7 @@ class TestCSVToOptions:
 
     def test_header(self, isolated_cli_runner):
         with open(FILENAME, "w") as f:
-            f.write(f"value;label\n")
+            f.write("value;label\n")
             for line in DATA:
                 f.write(f"{line['value']};{line['label'].split(' ')[1]}\n")
 

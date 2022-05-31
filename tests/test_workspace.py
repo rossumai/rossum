@@ -102,11 +102,11 @@ class TestDelete:
             json={
                 "pagination": {"next": None, "total": 1},
                 "results": [
-                    {"id": i, "url": fr"{ANNOTATIONS_URL}/{i}", "document": fr"{DOCUMENTS_URL}/{i}"}
+                    {"id": i, "url": rf"{ANNOTATIONS_URL}/{i}", "document": rf"{DOCUMENTS_URL}/{i}"}
                     for i in range(n_documents)
                 ],
                 "documents": [
-                    {"id": i, "url": fr"{DOCUMENTS_URL}/{i}"} for i in range(n_documents)
+                    {"id": i, "url": rf"{DOCUMENTS_URL}/{i}"} for i in range(n_documents)
                 ],
             },
         )
@@ -116,7 +116,7 @@ class TestDelete:
         )
 
         requests_mock.delete(
-            re.compile(fr"{DOCUMENTS_URL}/\d+"),
+            re.compile(rf"{DOCUMENTS_URL}/\d+"),
             request_headers={"Authorization": f"Token {TOKEN}"},
             status_code=204,
         )

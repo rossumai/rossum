@@ -83,7 +83,7 @@ def mock_organization_urls(request: FixtureRequest, requests_mock):
     )
 
     requests_mock.get(
-        re.compile(fr"{WORKSPACES_URL}/\d$"),
+        re.compile(rf"{WORKSPACES_URL}/\d$"),
         json={"organization": organization_url},
         request_headers={"Authorization": f"Token {TOKEN}"},
     )

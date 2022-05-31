@@ -15,7 +15,7 @@ DataPoints = List[DataPointDict]
 
 
 def split_dict_params(
-    datapoint_parameters: Iterable[str]
+    datapoint_parameters: Iterable[str],
 ) -> Iterator[Tuple[str, DataPointDictItem]]:
     for param in datapoint_parameters:
         key, value = param.split("=", 1)

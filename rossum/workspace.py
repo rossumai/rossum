@@ -28,7 +28,9 @@ def create_command(ctx: click.Context, name: str, organization_id: Optional[int]
 
 @cli.command(name="list", help="List all workspaces.")
 @click.pass_context
-def list_command(ctx: click.Context,):
+def list_command(
+    ctx: click.Context,
+):
     with RossumClient(context=ctx.obj) as rossum:
         workspaces = rossum.get_workspaces((QUEUES,))
 

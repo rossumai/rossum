@@ -113,7 +113,9 @@ def create_command(
 
 @cli.command(name="list", help="List all hooks.")
 @click.pass_context
-def list_command(ctx: click.Context,):
+def list_command(
+    ctx: click.Context,
+):
     with RossumClient(context=ctx.obj) as rossum:
         hooks_list = rossum.get_hooks((QUEUES,))
 

@@ -167,7 +167,7 @@ class XlsxToSchema:
 
     @staticmethod
     def _extract_attributes(
-        columns: List[Optional[str]]
+        columns: List[Optional[str]],
     ) -> Tuple[str, Optional[str], str, List[Optional[str]]]:
         ids, attrs = columns[:ATTRS_INDEX], columns[ATTRS_INDEX:]
 
@@ -281,9 +281,9 @@ def _traverse_schema_in_order(
     return result
 
 
-def _uniq(l: List[Dict]) -> Dict[str, str]:
+def _uniq(datapoints: List[Dict]) -> Dict[str, str]:
     result: Dict[str, str] = {}
-    for item in l:
+    for item in datapoints:
         result.update(**item)
     return result
 

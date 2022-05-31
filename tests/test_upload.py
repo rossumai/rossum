@@ -35,7 +35,7 @@ class TestUpload:
             status_code=201,
         )
         requests_mock.patch(
-            re.compile(fr"{QUEUES_URL}/\d"),
+            re.compile(rf"{QUEUES_URL}/\d"),
             request_headers={"Authorization": f"Token {TOKEN}"},
             additional_matcher=partial(match_uploaded_json, {"schema": new_schema_url}),
         )

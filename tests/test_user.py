@@ -150,7 +150,7 @@ class TestList:
         group_url = f"{GROUPS_URL}/1"
 
         requests_mock.get(
-            USERS_URL + f"?is_active=true",
+            USERS_URL + "?is_active=true",
             complete_qs=True,
             json={
                 "pagination": {"total": 1, "next": None},
@@ -239,7 +239,7 @@ def mock_user_urls(requests_mock):
         return {"url": url, "workspace": f"{WORKSPACES_URL}/{id_}"}
 
     requests_mock.get(
-        re.compile(fr"{QUEUES_URL}/\d$"),
+        re.compile(rf"{QUEUES_URL}/\d$"),
         json=_get_queue_json_callback,
         request_headers={"Authorization": f"Token {TOKEN}"},
     )
@@ -253,7 +253,7 @@ def mock_user_urls(requests_mock):
     )
 
     requests_mock.get(
-        re.compile(fr"{WORKSPACES_URL}\?organization=\d"),
+        re.compile(rf"{WORKSPACES_URL}\?organization=\d"),
         json={
             "results": [
                 {"url": f"{WORKSPACES_URL}/{w}", "queues": [f"{QUEUES_URL}/{w}"]}
@@ -297,7 +297,7 @@ def mock_organization_urls(requests_mock):
     requests_mock.get(f"{USERS_URL}/1", json={"organization": ORGANIZATION_URL})
 
     requests_mock.get(
-        re.compile(fr"{WORKSPACES_URL}/\d$"),
+        re.compile(rf"{WORKSPACES_URL}/\d$"),
         json={"organization": ORGANIZATION_URL},
         request_headers={"Authorization": f"Token {TOKEN}"},
     )

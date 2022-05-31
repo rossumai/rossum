@@ -33,7 +33,9 @@ ROSSUM_PASSWORD: password to the ROSSUM account
 
 @click.command(name="configure", help=HELP)
 @click.pass_context
-def cli(ctx: click.Context,):
+def cli(
+    ctx: click.Context,
+):
     config = configparser.RawConfigParser()
 
     if os.path.isfile(CONFIGURATION_PATH):
@@ -41,9 +43,9 @@ def cli(ctx: click.Context,):
             config.read_file(f)
 
     config[ctx.obj[CTX_PROFILE]] = {
-        "url": click.prompt(f"API URL", default=DEFAULT_ROSSUM_URL, type=str).strip().rstrip("/"),
-        "username": click.prompt(f"Username", type=str).strip(),
-        "password": click.prompt(f"Password", hide_input=True, type=str).strip(),
+        "url": click.prompt("API URL", default=DEFAULT_ROSSUM_URL, type=str).strip().rstrip("/"),
+        "username": click.prompt("Username", type=str).strip(),
+        "password": click.prompt("Password", hide_input=True, type=str).strip(),
     }
 
     CONFIGURATION_PATH.parent.mkdir(parents=True, exist_ok=True)

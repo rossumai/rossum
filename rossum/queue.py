@@ -68,7 +68,9 @@ def create_command(
 
 @cli.command(name="list", help="List all queues.")
 @click.pass_context
-def list_command(ctx: click.Context,) -> None:
+def list_command(
+    ctx: click.Context,
+) -> None:
     with RossumClient(context=ctx.obj) as rossum:
         queues = rossum.get_queues((WORKSPACES, INBOXES, SCHEMAS, USERS, HOOKS))
 

@@ -48,7 +48,7 @@ setup(
     python_requires=">=3.6",
     setup_requires=["pytest-runner"],
     tests_require=[
-        "pytest",
+        "pytest<6.1.2",  # higher versions support only python3.7+
         "pytest-cov",
         "requests_mock",
         "pytest-click",

@@ -107,7 +107,7 @@ class TestCreate:
     def test_success(self, requests_mock, cli_runner, tmp_path, hook_type, config, expected):
 
         requests_mock.get(
-            re.compile(fr"{QUEUES_URL}/\d$"),
+            re.compile(rf"{QUEUES_URL}/\d$"),
             json=lambda request, context: {"url": request.url},
             request_headers={"Authorization": f"Token {TOKEN}"},
         )
@@ -170,7 +170,7 @@ class TestCreate:
     def test_illegal_usage(self, requests_mock, cli_runner, tmp_path, hook_type, config, expected):
 
         requests_mock.get(
-            re.compile(fr"{QUEUES_URL}/\d$"),
+            re.compile(rf"{QUEUES_URL}/\d$"),
             json=lambda request, context: {"url": request.url},
             request_headers={"Authorization": f"Token {TOKEN}"},
         )
@@ -241,7 +241,7 @@ class TestCreate:
     def test_missing_option(self, requests_mock, cli_runner, tmp_path, hook_type, config, expected):
 
         requests_mock.get(
-            re.compile(fr"{QUEUES_URL}/\d$"),
+            re.compile(rf"{QUEUES_URL}/\d$"),
             json=lambda request, context: {"url": request.url},
             request_headers={"Authorization": f"Token {TOKEN}"},
         )
@@ -382,7 +382,7 @@ class TestCreate:
     def test_passing_invalid_json_string(self, requests_mock, cli_runner, tmp_path):
 
         requests_mock.get(
-            re.compile(fr"{QUEUES_URL}/\d$"),
+            re.compile(rf"{QUEUES_URL}/\d$"),
             json=lambda request, context: {"url": request.url},
             request_headers={"Authorization": f"Token {TOKEN}"},
         )

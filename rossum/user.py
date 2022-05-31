@@ -52,7 +52,9 @@ def create_command(
 
 @cli.command(name="list", help="List all users.")
 @click.pass_context
-def list_command(ctx: click.Context,):
+def list_command(
+    ctx: click.Context,
+):
     with RossumClient(context=ctx.obj) as rossum:
         users_list = rossum.get_users((QUEUES, GROUPS), is_active=True)
 

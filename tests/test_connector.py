@@ -29,7 +29,7 @@ class TestCreate:
         mock_token.return_value = generated_token = TOKEN * 3
 
         requests_mock.get(
-            re.compile(fr"{QUEUES_URL}/\d$"),
+            re.compile(rf"{QUEUES_URL}/\d$"),
             json=lambda request, context: {"url": request.url},
             request_headers={"Authorization": f"Token {TOKEN}"},
         )

@@ -52,7 +52,7 @@ class TestExtractData:
         )
 
         requests_mock.get(
-            re.compile(fr"{ANNOTATIONS_URL}/\d"),
+            re.compile(rf"{ANNOTATIONS_URL}/\d"),
             [
                 {"json": {"url": ANNOTATION_TO_REVIEW, "status": "importing"}, "status_code": 200},
                 {"json": {"url": ANNOTATION_TO_REVIEW, "status": "to_review"}, "status_code": 200},

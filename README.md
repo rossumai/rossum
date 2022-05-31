@@ -12,10 +12,10 @@ The elisctl package has been renamed to rossum.
 You may want to uninstall elisctl before installing rossum.
 ```
 
-**rossum** is a set of [tools for Rossum integrators](https://developers.rossum.ai/) that wrap
+**rossum** is a set of [tools for Rossum users](https://developers.rossum.ai/) that wrap
 the [Rossum API](https://api.elis.rossum.ai/docs)
-to provide an easy way to configure and customize a Rossum account - either
-interactively or programmatically.
+to provide an easy way to configure and customize a Rossum account programmatically. It is 
+the best buddy when it comes to making requests to Rossum API. 
 
 ## Installation
 
@@ -42,48 +42,52 @@ instead of using `requests` library directly. The advantages of using **rossum**
 * it contains a function that merges the paginated results into one list so the user does not need
 to get results page by page and take care of their merging,
 * it takes care of login and logout for the user,
+* it includes many methods for frequent actions that you don't need to write by yourself from scratch,
+* it includes configurable retry logic,
 * in case the API version changes, the change will be implemented to the
 library by Rossum for all the users.
 
-See the sample script using **rossum** within a code to export the documents:
+
+To make any request to Rossum API, use `RossumClient()` class wrapper. You can use a Rossum
+token to log in or use username and password. You need to either pass the credentials 
+including the URL directly to the client, or set `ROSSUM_URL` envvar and either a token 
+or `ROSSUM_USERNAME` and `ROSSUM_PASSWORD` envvars in your code. See the sample script 
+using **rossum** within a code to export the documents:
 
 ```python
-import json
-import logging
+import datetime
+from rossum.lib.api_client import RossumClient
 
-from rossum.lib.api_client import APIClient
-from datetime import date, timedelta
 
-queue_id = 12673
-username = 'your_username'
-password = 'your_password'
-reviewed_documents = "exported,exporting,failed_export"
-
-# This example downloads data for documents exported during the previous calendar day.
-date_today = date.today()
-date_end = date_today
-date_start = date_today - timedelta(days=1)
+queue_id = 123456
+username = "your_username"
+password = "your_password"
+endpoint = "https://api.elis.rossum.ai/v1"
 
 def export_documents():
-    logging.info("Export started...")
-    with APIClient(context=None, user=username, password=password) as rossum:
-
-            annotations_list, _ = rossum.get_paginated(f"queues/{queue_id}/export",
-                                                        {"status": reviewed_documents,
-                                                        "format": "json",
-                                                        "ordering": "exported_at",
-                                                        "exported_at_after": date_start.isoformat(),
-                                                        "exported_at_before": date_end.isoformat()})
-
-            with open('data.json', 'w') as f:
-                json.dump(annotations_list, f)
-    logging.info("...export finished.")
+    with RossumClient(context=None, user=username, password=password, url=endpoint) as client:
+        date_today = datetime.date.today()
+        date_end = date_today
+        date_start = date_today - datetime.timedelta(days=1)
+        response = client.get(
+            f"queues/{queue_id}/export?format=xml&"
+            f"exported_at_after={date_start.isoformat()}&"
+            f"exported_at_before={date_end.isoformat()}&"
+            f"ordering=exported_at&"
+            f"page_size=100&page=1"
+        )
+    
+    if not response.ok:
+        raise ValueError(f"Failed to export: {response.status_code}")
 
 if __name__ == "__main__":
     export_documents()
 
 ```
 ### API Client command line tool
+
+> :warning: CLI functionality is not actively developed anymore.
+
 The **rossum** tool can be either used in a **command line interface** mode
 by executing each command through `rossum` individually by passing it as an argument,
 or in an **interactive shell** mode of executing `rossum` without parameters

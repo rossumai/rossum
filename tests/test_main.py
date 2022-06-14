@@ -1,10 +1,7 @@
-from traceback import print_tb
-
-from rossum.main import entry_point
+from rossum.main import main
 
 
-class TestEntryPoint:
-    def test_shell(self, cli_runner):
-        result = cli_runner.invoke(entry_point)
-        assert not result.exit_code, print_tb(result.exc_info[2])
-        assert result.output.rstrip("\n").endswith("rossum> ")
+class TestMain:
+    def test_main(self):
+
+        main()

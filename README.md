@@ -229,6 +229,14 @@ MIT
 
 ## Changelog
 
+### 2022-08-04 v3.15.0
+
+* feat(.gitignore): ignore vscode
+* feat(api_client): add email param for user creation
+* feat(tox) add py39 test env 
+* ref(README) format file by linter
+* build(pre-commit) update versions
+
 ### 2022-02-18 v3.14.0
 
 * Ensure compatibility with click<8.1.0

@@ -1,0 +1,10 @@
+pytest
+pytest-cov
+requests_mock
+pytest-click
+tomli<2.0
+types-tabulate
+types-requests
+codecov
+pre-commit
+tox

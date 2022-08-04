@@ -116,3 +116,8 @@ pom.*
 # Silk profiles
 /elis_backend/silk_profiles/*
 !/elis_backend/silk_profiles/.keep
+
+
+# vscode 
+.vscode
+.devcontainer

@@ -545,13 +545,14 @@ class RossumClient(APIClient):
         password: str,
         group: str,
         locale: str,
+        email: str = "",
     ) -> dict:
         return get_json(
             self.post(
                 USERS,
                 data={
                     "username": username,
-                    "email": username,
+                    "email": email if email else username,
                     "organization": organization,
                     "password": password,
                     "groups": [g["url"] for g in self.get_groups(group_name=group)],

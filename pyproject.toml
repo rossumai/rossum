@@ -27,3 +27,12 @@ exclude = '''
   | profiling
 )/
 '''
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+
+[tools.mypy]
+python_version = 3.7
+ignore_missing_imports = true

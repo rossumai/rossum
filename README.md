@@ -14,8 +14,8 @@ You may want to uninstall elisctl before installing rossum.
 
 **rossum** is a set of [tools for Rossum users](https://developers.rossum.ai/) that wrap
 the [Rossum API](https://api.elis.rossum.ai/docs)
-to provide an easy way to configure and customize a Rossum account programmatically. It is 
-the best buddy when it comes to making requests to Rossum API. 
+to provide an easy way to configure and customize a Rossum account programmatically. It is
+the best buddy when it comes to making requests to Rossum API.
 
 ## Installation
 
@@ -31,14 +31,18 @@ Install it. And run it either from start menu or from command prompt.
 ### UNIX based systems
 
 Install the package from PyPI:
+
 ```bash
 pip install rossum
 ```
 
 ## Usage
+
 ### Python API Client Library
+
 The **rossum** library can be used to communicate with Rossum API,
 instead of using `requests` library directly. The advantages of using **rossum**:
+
 * it contains a function that merges the paginated results into one list so the user does not need
 to get results page by page and take care of their merging,
 * it takes care of login and logout for the user,
@@ -47,11 +51,10 @@ to get results page by page and take care of their merging,
 * in case the API version changes, the change will be implemented to the
 library by Rossum for all the users.
 
-
 To make any request to Rossum API, use `RossumClient()` class wrapper. You can use a Rossum
-token to log in or use username and password. You need to either pass the credentials 
-including the URL directly to the client, or set `ROSSUM_URL` envvar and either a token 
-or `ROSSUM_USERNAME` and `ROSSUM_PASSWORD` envvars in your code. See the sample script 
+token to log in or use username and password. You need to either pass the credentials
+including the URL directly to the client, or set `ROSSUM_URL` envvar and either a token
+or `ROSSUM_USERNAME` and `ROSSUM_PASSWORD` envvars in your code. See the sample script
 using **rossum** within a code to export the documents:
 
 ```python
@@ -82,8 +85,8 @@ def export_documents():
 
 if __name__ == "__main__":
     export_documents()
-
 ```
+
 ### API Client command line tool
 
 > :warning: CLI functionality is not actively developed anymore.
@@ -98,16 +101,21 @@ Commands are organized by object type in a tree-like structure and thus are comp
 of multiple words (e.g. `user create` or `schema transform`).
 
 So either get the list of commands and execute them immediately such as:
+
 ```shell
-$ rossum --help
-$ rossum configure
+rossum --help
+rossum configure
 ```
+
 or run the interactive shell by simply running
+
 ```shell
-$ rossum
+rossum
 ```
+
 See the sample using **rossum** command line tool to create the main objects within an organization and  
 assign a user to a queue:
+
 ```shell
 $ rossum configure
 API URL [https://api.elis.rossum.ai]:
@@ -126,13 +134,15 @@ $ rossum user_assignment add -u 59119 -q 50117
 
 To run commands described below under a chosen user, it is possible to use profiles defined by
 configure function such as
+
 ```shell
-$ rossum --profile profile_name configure
+rossum --profile profile_name configure
 ```
 
 After defining necessary profiles and their credentials, the profile can be chosen the following way
+
 ```shell
-$ rossum --profile profile_name queue list
+rossum --profile profile_name queue list
 ```
 
 ## Edit Schema
@@ -142,6 +152,7 @@ the sidebar-describing schema according to business requirements. Using rossum
 you can edit schema easily as a JSON or XLSX file.
 
 List queues to obtain schema id:
+
 ```shell
 $ rossum queue list
   id  name                           workspace  inbox                                       schema  users
@@ -150,24 +161,26 @@ $ rossum queue list
 ```
 
 Download schema as a json:
+
 ```shell
-$ rossum schema get 7 -O schema.json
+rossum schema get 7 -O schema.json
 ```
 
 Open the `schema.json` file in you favourite editor and upload modified version back to Rossum.
+
 ```shell
-$ rossum schema update 7 --rewrite schema.json
+rossum schema update 7 --rewrite schema.json
 ```
 
 You can also edit schema as an Excel (xlsx) file.
+
 ```shell
-$ rossum schema get 7 --format xlsx -O schema.xlsx
-$ rossum schema update 7 --rewrite schema.xlsx
+rossum schema get 7 --format xlsx -O schema.xlsx
+rossum schema update 7 --rewrite schema.xlsx
 ```
 
 From now on, documents will follow new schema. (Warning! If you don't use `--rewrite` option,
 the new schema will receive a new id - obtain it by `queue list` again.)
-
 
 ## Schema Transformations
 
@@ -176,6 +189,7 @@ that may be easily used for schema management automation. See `rossum schema tra
 and `rossum tools` tools for further reference.
 
 Run something like:
+
 ```shell
 $ rossum schema transform substitute-options default_schema.json centre <( \
    rossum tools xls_to_csv ~/Downloads/ERA_osnova_strediska.xlsx --header 0 --sheet 1 | rossum tools csv_to_options - ) \
@@ -186,6 +200,7 @@ $ rossum schema transform substitute-options default_schema.json centre <( \
 ```
 
 ## License
+
 MIT
 
 ## Contributing
@@ -196,92 +211,125 @@ MIT
 * After an approved review, when releasing, a `Collaborator` with `Admin` role shall do the following in `master` branch:
   * Update the Changelog in README, describing all the changes included in the newest release
   * run:
+
     ```bash
     bump2version minor
     git push
     git push --tags
-    ``` 
+    ```
+
 * In the end, to build a Windows installer, run:
+
     ```bash
     pynsist installer.cfg
-    ``` 
+    ```
+
 * Go to [releases](#https://github.com/rossumai/rossum/releases) and upload the newest .exe file from the
-  `.build` folder of your `rossum` repository to the newest release 
-   
+  `.build` folder of your `rossum` repository to the newest release
+
 ## Changelog
+
+### 2022-08-04 v3.15.0
+
+* feat(.gitignore): ignore vscode
+* feat(api_client): add email param for user creation
+* feat(tox) add py39 test env 
+* ref(README) format file by linter
+* build(pre-commit) update versions
+
 ### 2022-02-18 v3.14.0
+
 * Ensure compatibility with click<8.1.0
 
 ### 2021-11-1 v3.13.1 and v3.13.2
+
 * Update setup of the release process for pypi
 
 ### 2021-10-29 v3.13.0
+
 * Add method for getting annotations
 * Refactor sideloading functionality to enable sideloading of new objects
 * Add sideloading option for get_paginated() method
 
 ### 2021-10-29 v3.12.1
+
 * Propagate changelogs to the releases
 
 ### 2021-10-24 v3.12.0
+
 * Allow sending new attributes to API when creating hooks
 * Response is being propagated to the RossumException
 * Added functions to iterate over hook payload easily
 * Fix for library versioning due to incorrectly published tags
 
 ### 2021-09-06 v3.10.0
+
 * Allow creation of inbox without passing bounce email
 * Allow uploading documents by passing file as bytes to the API client
 
 ### 2021-04-18 v3.9.1
+
 * Include tenacity library in the Windows build
 
 ### 2021-04-15 v3.9.0
+
 * Allow filtering specific queue IDs when listing all user's queues
 
 ### 2021-04-06 v3.8.0
+
 * Allow passing token_owner, test and run_after attributes when creating and changing hook objects
 
 ### 2021-04-01 v3.7.0
+
 * Applied configurable retry mechanism to all requests done via rossum library
 * Enable assigning annotator_limited role to user
 
 ### 2021-03-04 v3.6.0
+
 * Allow setting rir_params for queues
 
 ### 2021-01-25 v3.5.0
+
 * Allow setting custom timeout for APIClient requests
 * Use openpyxl engine for xlsx files reading
 * Apply minor code optimalization fixes
 
 ### 2020-11-16 v3.4.0
+
 * Create password command
 
 ### 2020-11-11 v3.3.0
+
 * Allow passing parameters when listing hooks
 * Fix passing metadata when creating a workspace
 
 ### 2020-10-20 v3.2.1
+
 * Remove Obsoletes-Dist
 
 ### 2020-10-20 v3.2.0
+
 * Enable creating serverless functions
 * Add method for creating workspaces
 * Allow setting up sideloading on hooks
 * Refactor _request_url() to allow custom logging
 
 ### 2020-09-29 v3.1.0
+
 * Fix missing library in setup.py
 * Remove references to old package names
 * Update `setup.py`
 
 ### 2020-09-29 v3.0.0
+
 * elisctl was renamed to rossum
 
 ### 2020-07-27 v2.10.1
+
 * Fix attribute name for setting max token lifetime
 
 ### 2020-07-24 v2.10.0
+
 * Add `schema list` command
 * Fix `webhook change` command issue
 * Remove `csv get` command
@@ -292,27 +340,31 @@ MIT
 * Fix Python3.8 support
 
 ### 2020-02-18 v2.9.0
+
 * allow editing inbox attributes separately on queue-related commands
 * add support for `can_collapse` in xlsx schema
 * add sample usage of elisctl library in a Python code
 * make queue option required on `user create`
 
 ### 2019-10-31 v2.8.0
+
 * Add webhook command
 * Allow creating and changing inbox properties on `queue change` command
 
 ### 2019-09-30 v2.7.1
+
 * Improve documentation
 
 ### 2019-08-13 v2.7.0
+
 * Add command `user_assignment` for bulk assignment of users to queues
 * Change command `connector create`: `queue_id` parameter needs to be specified, if there is more than one queue in organization
 * Support schema attribute `width` in XLSX schema format
 * Fixed: booleans, in XLSX schema format, can be specified as boolean types
 * Internal: filename can be specified in `ELISClient.upload_document`
 
-
 ### 2019-07-30 v2.6.0
+
 * Enable passing custom filename with upload
 
 ### 2019-07-12 v2.5.0
@@ -337,7 +389,6 @@ MIT
 ### 2019-06-11 v2.2.1
 
 * Update packages for windows build.
-
 
 ### 2019-06-03 v2.2.0
 

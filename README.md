@@ -231,6 +231,10 @@ MIT
 
 ## Changelog
 
+### 2024-01-25 v3.17.1
+
+* Fix: Pin openpyxl dependency to a specific version due to [this issue](https://stackoverflow.com/questions/75299506/cannot-import-name-save-virtual-workbook-from-openpyxl-writer-excel)
+
 ### 2024-01-25 v3.17.0
 
 * Pin openpyxl dependency to allow using Rossum CLI

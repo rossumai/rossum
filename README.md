@@ -12,7 +12,9 @@ The elisctl package has been renamed to rossum.
 You may want to uninstall elisctl before installing rossum.
 ```
 
-**rossum** is a set of [tools for Rossum users](https://developers.rossum.ai/) that wrap
+> 📝 Consider substituting rossum in your project with the more up-to-date [rossum-sdk](https://github.com/rossumai/rossum-sdk) library.
+
+**rossum** is a set of [tools for Rossum integrators](https://developers.rossum.ai/) that wrap
 the [Rossum API](https://api.elis.rossum.ai/docs)
 to provide an easy way to configure and customize a Rossum account programmatically. It is
 the best buddy when it comes to making requests to Rossum API.
@@ -228,6 +230,10 @@ MIT
   `.build` folder of your `rossum` repository to the newest release
 
 ## Changelog
+
+### 2024-01-25 v3.16.0
+
+* Allow using click>8.0.0
 
 ### 2022-08-04 v3.15.0
 

@@ -231,7 +231,11 @@ MIT
 
 ## Changelog
 
-### 2024-01-25 v3.17.2
+### 2024-01-25 v3.19.0
+
+* Fix: Fix type error from click
+
+### 2024-01-25 v3.18.0
 
 * Fix: Substitute obsolete click function
 

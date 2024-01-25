@@ -150,7 +150,7 @@ def move_command(ctx: click.Context, source_id: str, target_id: str) -> DataPoin
     return traverse_datapoints(new_schema, add, parent_id=target_id, datapoint_to_add=source_dp)
 
 
-@cli.result_callback()
+@cli.result_callback
 @click.pass_context
 def process_result(
     ctx: click.Context,

@@ -32,7 +32,7 @@ setup(
     packages=find_packages(exclude=("tests*",)),
     install_requires=[
         "pandas",
-        "click<8.1.0",
+        "click",
         "click-shell",
         "xlrd > 1.2.0",
         "requests",

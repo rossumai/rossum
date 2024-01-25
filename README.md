@@ -231,6 +231,10 @@ MIT
 
 ## Changelog
 
+### 2024-01-25 v3.17.0
+
+* Pin openpyxl dependency to allow using Rossum CLI
+
 ### 2024-01-25 v3.16.0
 
 * Allow using click>8.0.0

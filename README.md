@@ -1,5 +1,8 @@
 # rossum
 
+> [!WARNING]
+> **⚠️ DECOMMISSIONED**: This project is no longer maintained. Active development has moved to [rossum-api](https://github.com/rossumai/rossum-api).
+
 [![PyPI - version](https://img.shields.io/pypi/v/rossum.svg)](https://pypi.python.org/pypi/rossum)
 [![Build Status](https://travis-ci.com/rossumai/rossum.svg?branch=master)](https://travis-ci.com/rossumai/rossum)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
